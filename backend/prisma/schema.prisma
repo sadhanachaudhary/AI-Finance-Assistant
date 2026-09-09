@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String           @id @default(uuid())
+  email          String           @unique
+  passwordHash   String
+  name           String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  
+  expenses       Expense[]
+  bills          Bill[]
+  conversations  AIConversation[]
+  notifications  Notification[]
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  icon      String?
+  color     String?
+  
+  expenses  Expense[]
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  amount      Float
+  currency    String   @default("INR")
+  date        DateTime
+  merchant    String?
+  notes       String?
+  
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  
+  isSynced    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  bill        Bill?
+}
+
+model Bill {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  
+  expenseId      String?  @unique
+  expense        Expense? @relation(fields: [expenseId], references: [id])
+  
+  fileUrl        String
+  extractedData  Json?    // Storing structured data extracted by AI
+  
+  items          BillItem[]
+  
+  createdAt      DateTime @default(now())
+}
+
+model BillItem {
+  id          String  @id @default(uuid())
+  billId      String
+  bill        Bill    @relation(fields: [billId], references: [id], onDelete: Cascade)
+  
+  name        String
+  quantity    Int     @default(1)
+  price       Float
+}
+
+model AIConversation {
+  id        String       @id @default(uuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  
+  title     String?
+  createdAt DateTime     @default(now())
+  
+  messages  AIMessage[]
+}
+
+model AIMessage {
+  id             String          @id @default(uuid())
+  conversationId String
+  conversation   AIConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  role           String          // 'user' or 'assistant'
+  content        String
+  createdAt      DateTime        @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+}
