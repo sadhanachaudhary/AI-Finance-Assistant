@@ -1,0 +1,39 @@
+node_modules/
+dist/
+build/
+.env
+*.log
+.DS_Store
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/build/
+**/*.a
+**/*.apk
+**/*.aab
+**/*.app
+**/*.ipa
+**/*.dylib
+**/*.exe
+**/*.so
+**/*.dll
+**/*.lib
+
+# Secrets
+*.pem
+*.key
+backend/.env
+mobile/.env
+
+# Prisma
+backend/prisma/*.db
+backend/prisma/*.db-journal
+
+# VSCode
+.vscode/
