@@ -1,19 +1,21 @@
-import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../features/auth/ui/login_screen.dart';
 import '../features/auth/ui/register_screen.dart';
+import '../features/dashboard/ui/dashboard_screen.dart';
+import '../features/dashboard/ui/main_shell_screen.dart';
+import '../features/expenses/ui/expenses_screen.dart';
+import '../features/analytics/ui/analytics_screen.dart';
+import '../features/ai_assistant/ui/ai_chat_screen.dart';
+import '../features/profile/ui/profile_screen.dart';
 
-// Placeholder screen for dashboard
-class PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const PlaceholderScreen({super.key, required this.title});
-  @override
-  Widget build(BuildContext context) => Scaffold(body: Center(child: Text(title)));
-}
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/login',
+  navigatorKey: _rootNavigatorKey,
+  initialLocation: '/dashboard',
   routes: [
+    // Auth Routes
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
@@ -22,13 +24,59 @@ final GoRouter appRouter = GoRouter(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
     ),
-    GoRoute(
-      path: '/dashboard',
-      builder: (context, state) => const PlaceholderScreen(title: 'Dashboard Screen'),
+
+    // Stateful Nested Shell Route for Bottom Navigation Bar
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return MainShellScreen(navigationShell: navigationShell);
+      },
+      branches: [
+        // Tab 0: Home / Dashboard
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/dashboard',
+              builder: (context, state) => const DashboardScreen(),
+            ),
+          ],
+        ),
+        // Tab 1: Expenses
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/expenses',
+              builder: (context, state) => const ExpensesScreen(),
+            ),
+          ],
+        ),
+        // Tab 2: Analytics
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/analytics',
+              builder: (context, state) => const AnalyticsScreen(),
+            ),
+          ],
+        ),
+        // Tab 3: AI Assistant Chat
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/ai',
+              builder: (context, state) => const AiChatScreen(),
+            ),
+          ],
+        ),
+        // Tab 4: Profile
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
+          ],
+        ),
+      ],
     ),
   ],
-  redirect: (context, state) {
-    // We will implement auth check redirect later using Riverpod state
-    return null;
-  },
 );

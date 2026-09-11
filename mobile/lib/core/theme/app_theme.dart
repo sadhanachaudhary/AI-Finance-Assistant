@@ -9,12 +9,10 @@ class AppTheme {
         primary: Color(0xFF6C63FF), // Vibrant purple
         secondary: Color(0xFF03DAC6), // Teal accent
         surface: Color(0xFF1E1E1E),
-        background: Color(0xFF121212),
         error: Color(0xFFCF6679),
         onPrimary: Colors.white,
         onSecondary: Colors.black,
         onSurface: Colors.white,
-        onBackground: Colors.white,
       ),
       fontFamily: 'Inter', // Assuming Inter is standard or we use default sans
       appBarTheme: const AppBarTheme(
@@ -32,7 +30,7 @@ class AppTheme {
           backgroundColor: const Color(0xFF6C63FF),
           foregroundColor: Colors.white,
           elevation: 4,
-          shadowColor: const Color(0xFF6C63FF).withOpacity(0.5),
+          shadowColor: const Color(0xFF6C63FF).withValues(alpha: 0.5),
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -65,6 +63,31 @@ class AppTheme {
         ),
         hintStyle: const TextStyle(color: Colors.white54),
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: const Color(0xFF181818),
+        indicatorColor: const Color(0xFF6C63FF).withValues(alpha: 0.2),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: Color(0xFF6C63FF));
+          }
+          return const IconThemeData(color: Colors.white60);
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF6C63FF),
+            );
+          }
+          return const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.white60,
+          );
+        }),
+      ),
     );
   }
 }
+

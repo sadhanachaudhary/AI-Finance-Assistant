@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -24,12 +26,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     super.initState();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 900),
     );
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeOut),
     );
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeOutQuart),
     );
     _animController.forward();
@@ -74,7 +76,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: SlideTransition(
@@ -85,17 +87,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Icon(
-                        Icons.account_balance_wallet_rounded,
-                        size: 80,
-                        color: Color(0xFF6C63FF),
+                      Center(
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6C63FF), Color(0xFF03DAC6)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF6C63FF).withValues(alpha: 0.35),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.account_balance_wallet_rounded,
+                            size: 42,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 28),
                       const Text(
                         'Welcome Back',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 32,
+                          fontSize: 28,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.5,
                         ),
@@ -105,60 +128,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                         'Login to manage your finances intelligently',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           color: Colors.white54,
                         ),
                       ),
-                      const SizedBox(height: 48),
-                      TextFormField(
+                      const SizedBox(height: 36),
+                      AppTextField(
                         controller: _emailController,
+                        labelText: 'Email Address',
+                        hintText: 'name@example.com',
+                        prefixIcon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          hintText: 'Email Address',
-                          prefixIcon: Icon(Icons.email_outlined, color: Colors.white54),
-                        ),
-                        validator: (v) => v!.isEmpty ? 'Enter email' : null,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'Enter your email';
+                          if (!v.contains('@')) return 'Enter a valid email';
+                          return null;
+                        },
                       ),
-                      const SizedBox(height: 16),
-                      TextFormField(
+                      const SizedBox(height: 18),
+                      AppTextField(
                         controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          hintText: 'Password',
-                          prefixIcon: Icon(Icons.lock_outline, color: Colors.white54),
-                        ),
-                        validator: (v) => v!.isEmpty ? 'Enter password' : null,
+                        labelText: 'Password',
+                        hintText: 'Enter your password',
+                        prefixIcon: Icons.lock_outline,
+                        isPassword: true,
+                        validator: (v) => (v == null || v.isEmpty) ? 'Enter password' : null,
+                        onSubmitted: (_) => _handleLogin(),
                       ),
-                      const SizedBox(height: 32),
-                      ElevatedButton(
-                        onPressed: authState.isLoading ? null : _handleLogin,
-                        child: authState.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : const Text('Login'),
+                      const SizedBox(height: 28),
+                      AppButton(
+                        text: 'Login',
+                        isLoading: authState.isLoading,
+                        onPressed: _handleLogin,
                       ),
-                      const SizedBox(height: 24),
-                      TextButton(
-                        onPressed: () => context.push('/register'),
-                        child: RichText(
-                          text: const TextSpan(
-                            text: "Don't have an account? ",
-                            style: TextStyle(color: Colors.white54, fontSize: 14),
-                            children: [
-                              TextSpan(
-                                text: 'Sign Up',
-                                style: TextStyle(
-                                  color: Color(0xFF03DAC6),
-                                  fontWeight: FontWeight.bold,
+                      const SizedBox(height: 20),
+                      Center(
+                        child: TextButton(
+                          onPressed: () => context.push('/register'),
+                          child: RichText(
+                            text: const TextSpan(
+                              text: "Don't have an account? ",
+                              style: TextStyle(color: Colors.white54, fontSize: 14),
+                              children: [
+                                TextSpan(
+                                  text: 'Sign Up',
+                                  style: TextStyle(
+                                    color: Color(0xFF03DAC6),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
