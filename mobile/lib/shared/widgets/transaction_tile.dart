@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/formatters.dart';
+import 'app_card.dart';
 
 class TransactionTile extends StatelessWidget {
   final String? id;
@@ -30,6 +31,144 @@ class TransactionTile extends StatelessWidget {
     this.onTap,
     this.onDelete,
   });
+
+  void _showTransactionDetails(BuildContext context, Color effectiveColor, IconData effectiveIcon) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        decoration: const BoxDecoration(
+          color: Color(0xFF14141E),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: Color(0xFF2C2C3E), width: 1.5)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: effectiveColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(effectiveIcon, color: effectiveColor, size: 26),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title.isNotEmpty ? title : (categoryName ?? 'Expense'),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        categoryName ?? 'Uncategorized',
+                        style: TextStyle(fontSize: 13, color: effectiveColor, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  Formatters.formatCurrency(amount, currency: currency),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Date, Day & Time Card
+            GlassCard(
+              padding: const EdgeInsets.all(16),
+              gradientColors: const [Color(0xFF201D38), Color(0xFF141324)],
+              child: Column(
+                children: [
+                  _buildDetailRow(
+                    icon: Icons.calendar_today_outlined,
+                    label: 'Day & Date',
+                    value: '${Formatters.formatDayOfWeek(date)}, ${date.day} ${_getMonthName(date.month)} ${date.year}',
+                  ),
+                  const Divider(color: Colors.white10, height: 20),
+                  _buildDetailRow(
+                    icon: Icons.access_time_rounded,
+                    label: 'Time of Expense',
+                    value: Formatters.formatTime(date),
+                  ),
+                  if (notes != null && notes!.isNotEmpty) ...[
+                    const Divider(color: Colors.white10, height: 20),
+                    _buildDetailRow(
+                      icon: Icons.notes_rounded,
+                      label: 'Details / Line Items',
+                      value: notes!,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _getMonthName(int month) {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return months[month - 1];
+  }
+
+  Widget _buildDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: const Color(0xFF03DAC6)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(color: Colors.white54, fontSize: 11)),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,7 +274,7 @@ class TransactionTile extends StatelessWidget {
     Widget interactiveContent = Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: onTap ?? () => _showTransactionDetails(context, effectiveColor, effectiveIcon),
         borderRadius: BorderRadius.circular(16),
         splashColor: effectiveColor.withValues(alpha: 0.1),
         highlightColor: effectiveColor.withValues(alpha: 0.05),
