@@ -1,3 +1,4 @@
+import '../../../core/constants/api_endpoints.dart';
 import '../../../networking/api_client.dart';
 import '../models/goal_model.dart';
 
@@ -8,7 +9,7 @@ class GoalRepository {
 
   Future<List<GoalModel>> getGoals() async {
     try {
-      final response = await _apiClient.dio.get('/goals');
+      final response = await _apiClient.dio.get(ApiEndpoints.goals);
       if (response.statusCode == 200 && response.data['success'] == true) {
         final List<dynamic> data = response.data['data'] as List<dynamic>;
         return data.map((json) => GoalModel.fromJson(json as Map<String, dynamic>)).toList();
@@ -31,7 +32,7 @@ class GoalRepository {
   }) async {
     try {
       final response = await _apiClient.dio.post(
-        '/goals',
+        ApiEndpoints.goals,
         data: {
           'name': name,
           'targetAmount': targetAmount,
@@ -55,7 +56,7 @@ class GoalRepository {
   Future<GoalModel?> depositToGoal(String id, double amount) async {
     try {
       final response = await _apiClient.dio.post(
-        '/goals/$id/deposit',
+        ApiEndpoints.goalDeposit(id),
         data: {'amount': amount},
       );
       if (response.statusCode == 200 && response.data['success'] == true) {
@@ -69,7 +70,7 @@ class GoalRepository {
 
   Future<bool> deleteGoal(String id) async {
     try {
-      final response = await _apiClient.dio.delete('/goals/$id');
+      final response = await _apiClient.dio.delete(ApiEndpoints.goalById(id));
       return response.statusCode == 200;
     } catch (_) {
       return false;

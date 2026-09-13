@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/constants/api_endpoints.dart';
+import '../../../shared/providers/security_provider.dart';
 import '../../../shared/utils/formatters.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../expenses/providers/expense_provider.dart';
 import '../../goals/providers/goal_provider.dart';
-import '../../../shared/providers/security_provider.dart';
 
 class ChatMessage {
   final String text;
@@ -104,7 +105,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         }).toList();
 
         final res = await apiClient.dio.post(
-          '/ai/chat',
+          ApiEndpoints.aiChat,
           data: {
             'message': userMsg,
             'history': historyPayload,

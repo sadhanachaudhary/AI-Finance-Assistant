@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../core/constants/api_endpoints.dart';
 import '../../../networking/api_client.dart';
 import '../models/user.dart';
 
@@ -9,7 +10,7 @@ class AuthRepository {
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
-      final response = await _apiClient.dio.post('/auth/login', data: {
+      final response = await _apiClient.dio.post(ApiEndpoints.login, data: {
         'email': email,
         'password': password,
       });
@@ -26,7 +27,7 @@ class AuthRepository {
 
   Future<Map<String, dynamic>> register(String email, String password, String name) async {
     try {
-      final response = await _apiClient.dio.post('/auth/register', data: {
+      final response = await _apiClient.dio.post(ApiEndpoints.register, data: {
         'email': email,
         'password': password,
         'name': name,

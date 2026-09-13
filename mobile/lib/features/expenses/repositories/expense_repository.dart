@@ -1,3 +1,4 @@
+import '../../../core/constants/api_endpoints.dart';
 import '../../../networking/api_client.dart';
 import '../models/expense_model.dart';
 import '../models/category_model.dart';
@@ -34,7 +35,7 @@ class ExpenseRepository {
       };
 
       final response = await _apiClient.dio.get(
-        '/expenses',
+        ApiEndpoints.expenses,
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
       if (response.statusCode == 200 && response.data['status'] == 'success') {
@@ -59,7 +60,7 @@ class ExpenseRepository {
   }) async {
     try {
       final response = await _apiClient.dio.post(
-        '/expenses',
+        ApiEndpoints.expenses,
         data: {
           'amount': amount,
           'currency': currency,
@@ -91,7 +92,7 @@ class ExpenseRepository {
 
   Future<void> deleteExpense(String id) async {
     try {
-      await _apiClient.dio.delete('/expenses/$id');
+      await _apiClient.dio.delete(ApiEndpoints.expenseById(id));
     } catch (_) {
       // Allowed in demo mode
     }
@@ -99,7 +100,7 @@ class ExpenseRepository {
 
   Future<List<Category>> getCategories() async {
     try {
-      final response = await _apiClient.dio.get('/categories');
+      final response = await _apiClient.dio.get(ApiEndpoints.categories);
       if (response.statusCode == 200 && response.data['status'] == 'success') {
         final list = response.data['data']['categories'] as List;
         final result = list.map((json) => Category.fromJson(json as Map<String, dynamic>)).toList();
@@ -118,7 +119,7 @@ class ExpenseRepository {
   }) async {
     try {
       final response = await _apiClient.dio.post(
-        '/categories',
+        ApiEndpoints.categories,
         data: {
           'name': name,
           'icon': ?icon,
