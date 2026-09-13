@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../shared/providers/currency_provider.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -11,11 +13,89 @@ import 'privacy_security_sheet.dart';
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
+  void _showCurrencyPicker(BuildContext context, WidgetRef ref) {
+    final current = ref.read(currencyProvider);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: const BoxDecoration(
+          color: AppTheme.bgSlate,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: AppTheme.borderSlate, width: 1.5)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Select Preferred Currency',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            const SizedBox(height: 14),
+            ...supportedCurrencies.map((c) {
+              final isSelected = c.code == current.code;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppTheme.trustBlue.withValues(alpha: 0.15) : AppTheme.surfaceSlate,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isSelected ? AppTheme.trustBlue : AppTheme.borderSlate,
+                    width: isSelected ? 1.5 : 1,
+                  ),
+                ),
+                child: ListTile(
+                  leading: Text(
+                    c.symbol,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? AppTheme.trustBlue : Colors.white,
+                    ),
+                  ),
+                  title: Text(
+                    c.name,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? const Icon(Icons.check_circle_rounded, color: AppTheme.trustBlue)
+                      : null,
+                  onTap: () {
+                    ref.read(currencyProvider.notifier).setCurrency(c);
+                    Navigator.pop(ctx);
+                  },
+                ),
+              );
+            }),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authUser = ref.watch(authProvider).value;
-    final userName =
-        authUser?.name ?? authUser?.email.split('@').first ?? 'User';
+    final currency = ref.watch(currencyProvider);
+    final userName = authUser?.name ?? authUser?.email.split('@').first ?? 'User';
     final userEmail = authUser?.email ?? 'user@example.com';
     final expenses = ref.watch(expensesProvider).value ?? [];
 
@@ -28,7 +108,7 @@ class ProfileScreen extends ConsumerWidget {
             // User Avatar Card
             GlassCard(
               padding: const EdgeInsets.all(20),
-              gradientColors: const [Color(0xFF26224A), Color(0xFF161528)],
+              gradientColors: const [Color(0xFF1E293B), Color(0xFF0F172A)],
               child: Row(
                 children: [
                   Container(
@@ -37,7 +117,7 @@ class ProfileScreen extends ConsumerWidget {
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
-                        colors: [Color(0xFF6C63FF), Color(0xFF03DAC6)],
+                        colors: [AppTheme.trustBlue, AppTheme.trustTeal],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -81,15 +161,13 @@ class ProfileScreen extends ConsumerWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF03DAC6,
-                            ).withValues(alpha: 0.15),
+                            color: AppTheme.inflowGreen.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             '${expenses.length} Records Logged',
                             style: const TextStyle(
-                              color: Color(0xFF03DAC6),
+                              color: AppTheme.inflowGreen,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -103,8 +181,35 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
 
+            // Financial Modules Shortcut Section
+            _buildSectionHeader('Financial Tools & Targets'),
+            const SizedBox(height: 10),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  _buildListTile(
+                    icon: Icons.flag_rounded,
+                    title: 'Savings Goals & Sinking Funds',
+                    trailing: 'View Goals',
+                    iconColor: AppTheme.inflowGreen,
+                    onTap: () => context.go('/goals'),
+                  ),
+                  const Divider(height: 1, color: AppTheme.borderSlate),
+                  _buildListTile(
+                    icon: Icons.insights_rounded,
+                    title: 'Budget Health & Burn Rate Forecast',
+                    trailing: 'Analytics',
+                    iconColor: AppTheme.trustBlue,
+                    onTap: () => context.go('/analytics'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
             // Data & Reports Section
-            _buildSectionHeader('Data & Exports'),
+            _buildSectionHeader('Data & Zero-Trust Security'),
             const SizedBox(height: 10),
             AppCard(
               padding: EdgeInsets.zero,
@@ -114,13 +219,15 @@ class ProfileScreen extends ConsumerWidget {
                     icon: Icons.file_download_outlined,
                     title: 'Export Spending Statement (CSV)',
                     trailing: 'Download',
+                    iconColor: AppTheme.trustTeal,
                     onTap: () => ExportStatementSheet.show(context),
                   ),
-                  const Divider(height: 1, color: Color(0xFF2C2C2C)),
+                  const Divider(height: 1, color: AppTheme.borderSlate),
                   _buildListTile(
                     icon: Icons.shield_outlined,
-                    title: 'Privacy & Zero-Trust Security',
-                    trailing: 'Manage',
+                    title: 'Privacy & Zero-Trust Security Shield',
+                    trailing: 'Active',
+                    iconColor: AppTheme.inflowGreen,
                     onTap: () => PrivacySecuritySheet.show(context),
                   ),
                 ],
@@ -129,23 +236,25 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Preferences Group
-            _buildSectionHeader('Preferences'),
+            _buildSectionHeader('App Preferences'),
             const SizedBox(height: 10),
             AppCard(
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
                   _buildListTile(
-                    icon: Icons.currency_rupee_rounded,
+                    icon: Icons.currency_exchange_rounded,
                     title: 'Default Currency',
-                    trailing: 'INR (₹)',
-                    onTap: () {},
+                    trailing: '${currency.code} (${currency.symbol})',
+                    iconColor: AppTheme.warningAmber,
+                    onTap: () => _showCurrencyPicker(context, ref),
                   ),
-                  const Divider(height: 1, color: Color(0xFF2C2C2C)),
+                  const Divider(height: 1, color: AppTheme.borderSlate),
                   _buildListTile(
                     icon: Icons.notifications_none_rounded,
-                    title: 'Smart Ingest Notifications',
-                    trailing: 'Active',
+                    title: 'Smart Spending Alerts',
+                    trailing: 'Enabled',
+                    iconColor: AppTheme.trustBlue,
                     onTap: () {},
                   ),
                 ],
@@ -158,8 +267,8 @@ class ProfileScreen extends ConsumerWidget {
               text: 'Log Out',
               icon: Icons.logout_rounded,
               variant: AppButtonVariant.outlined,
-              backgroundColor: const Color(0xFFCF6679),
-              textColor: const Color(0xFFCF6679),
+              backgroundColor: AppTheme.outflowCoral,
+              textColor: AppTheme.outflowCoral,
               onPressed: () async {
                 await ref.read(authProvider.notifier).logout();
                 if (context.mounted) {
@@ -169,7 +278,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
             const Text(
-              'AI Finance Assistant • v1.2.0 (Fintech Edition)',
+              'AI Finance Assistant • v1.3.0 (Fintech Edition)',
               style: TextStyle(color: Colors.white24, fontSize: 12),
             ),
             const SizedBox(height: 20),
@@ -185,7 +294,7 @@ class ProfileScreen extends ConsumerWidget {
       child: Text(
         title,
         style: const TextStyle(
-          fontSize: 14,
+          fontSize: 13.5,
           fontWeight: FontWeight.w600,
           color: Colors.white54,
           letterSpacing: 0.5,
@@ -198,18 +307,20 @@ class ProfileScreen extends ConsumerWidget {
     required IconData icon,
     required String title,
     required String trailing,
+    Color? iconColor,
     required VoidCallback onTap,
   }) {
+    final effectiveColor = iconColor ?? AppTheme.trustBlue;
     return Material(
       color: Colors.transparent,
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF6C63FF).withValues(alpha: 0.12),
+            color: effectiveColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: const Color(0xFF6C63FF), size: 18),
+          child: Icon(icon, color: effectiveColor, size: 18),
         ),
         title: Text(
           title,
@@ -235,3 +346,4 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 }
+

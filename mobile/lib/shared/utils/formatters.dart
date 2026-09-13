@@ -1,7 +1,32 @@
 class Formatters {
   /// Formats a number as currency (e.g. ₹1,250.00 or $1,250.00)
   static String formatCurrency(double amount, {String currency = 'INR'}) {
-    final symbol = currency == 'INR' ? '₹' : (currency == 'USD' ? r'$' : '$currency ');
+    final String symbol;
+    switch (currency.toUpperCase()) {
+      case 'INR':
+        symbol = '₹';
+        break;
+      case 'USD':
+        symbol = r'$';
+        break;
+      case 'EUR':
+        symbol = '€';
+        break;
+      case 'GBP':
+        symbol = '£';
+        break;
+      case 'AED':
+        symbol = 'AED ';
+        break;
+      case 'CAD':
+        symbol = r'CA$';
+        break;
+      case 'JPY':
+        symbol = '¥';
+        break;
+      default:
+        symbol = '$currency ';
+    }
     final isNegative = amount < 0;
     final absAmount = amount.abs();
 

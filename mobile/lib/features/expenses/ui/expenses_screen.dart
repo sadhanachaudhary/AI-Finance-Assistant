@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/utils/formatters.dart';
 import '../../../shared/widgets/app_states.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -45,14 +46,16 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     final selectedCat = ref.watch(selectedCategoryFilterProvider);
     final selectedDatePreset = ref.watch(dateFilterPresetProvider);
     final activeFiltersCount = ref.watch(activeFiltersCountProvider);
-    final totalSpend = ref.watch(totalSpendProvider);
+
+    // Calculate sum of currently filtered subset
+    final filteredTotal = filteredExpenses.fold(0.0, (sum, e) => sum + e.amount);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Expenses'),
+        title: const Text('Expenses & Transactions'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.auto_awesome, color: Color(0xFF03DAC6)),
+            icon: const Icon(Icons.auto_awesome, color: AppTheme.trustTeal),
             tooltip: 'Smart Auto-Track',
             onPressed: () => SmartIngestSheet.show(context),
           ),
@@ -77,7 +80,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: const BoxDecoration(
-                      color: Color(0xFF6C63FF),
+                      color: AppTheme.trustBlue,
                       shape: BoxShape.circle,
                     ),
                     constraints: const BoxConstraints(
@@ -109,7 +112,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => AddExpenseSheet.show(context),
-        backgroundColor: const Color(0xFF6C63FF),
+        backgroundColor: AppTheme.trustBlue,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: const Text('Add Expense', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
@@ -124,8 +127,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
 
           return RefreshIndicator(
             onRefresh: () => ref.read(expensesProvider.notifier).refresh(),
-            color: const Color(0xFF6C63FF),
-            backgroundColor: const Color(0xFF1E1E1E),
+            color: AppTheme.trustBlue,
+            backgroundColor: AppTheme.surfaceSlate,
             child: CustomScrollView(
               slivers: [
                 // Top Search & Summary Header
@@ -156,15 +159,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                 child: ChoiceChip(
                                   label: Text(preset.label),
                                   selected: isSelected,
-                                  selectedColor: const Color(0xFF6C63FF),
-                                  backgroundColor: const Color(0xFF1E1E1E),
+                                  selectedColor: AppTheme.trustBlue,
+                                  backgroundColor: AppTheme.surfaceSlate,
                                   labelStyle: TextStyle(
                                     color: isSelected ? Colors.white : Colors.white70,
                                     fontSize: 12,
                                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                   ),
                                   side: BorderSide(
-                                    color: isSelected ? const Color(0xFF6C63FF) : const Color(0xFF2C2C2C),
+                                    color: isSelected ? AppTheme.trustBlue : AppTheme.borderSlate,
                                   ),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   onSelected: (selected) {
@@ -237,7 +240,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                       'Clear all',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Color(0xFFCF6679),
+                                        color: AppTheme.outflowCoral,
                                         fontWeight: FontWeight.w600,
                                         decoration: TextDecoration.underline,
                                       ),
@@ -247,10 +250,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                               ],
                             ),
                             Text(
-                              'Total: ${Formatters.formatCurrency(totalSpend)}',
-                              style: const TextStyle(
+                              'Total: ${Formatters.formatCurrency(filteredTotal)}',
+                              style: AppTheme.tabularNumbers(
                                 fontSize: 14,
-                                color: Color(0xFF03DAC6),
+                                color: AppTheme.inflowGreen,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -315,7 +318,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text('Failed to delete: $e'),
-                                        backgroundColor: Theme.of(context).colorScheme.error,
+                                        backgroundColor: AppTheme.outflowCoral,
                                       ),
                                     );
                                   }

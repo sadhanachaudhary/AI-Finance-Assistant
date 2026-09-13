@@ -18,18 +18,31 @@ export interface ChatContext {
     merchant: string;
     amount: number;
   }>;
+  goals: Array<{
+    name: string;
+    targetAmount: number;
+    currentAmount: number;
+    currency: string;
+    percentage: number;
+  }>;
 }
 
 export class AiAdvisorService {
   /**
-   * Builds financial context snapshot for the user with exact dates, days, and times.
+   * Builds financial context snapshot for the user with exact dates, days, times, and goals.
    */
   static async getUserFinancialContext(userId: string): Promise<ChatContext> {
-    const expenses = await prisma.expense.findMany({
-      where: { userId },
-      include: { category: true },
-      orderBy: { date: 'desc' },
-    });
+    const [expenses, goals] = await Promise.all([
+      prisma.expense.findMany({
+        where: { userId },
+        include: { category: true },
+        orderBy: { date: 'desc' },
+      }),
+      (prisma as any).goal.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+      }).catch(() => []),
+    ]);
 
     const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
     const categoryBreakdown: Record<string, number> = {};
@@ -62,10 +75,18 @@ export class AiAdvisorService {
       };
     });
 
-    const subKeywords = ['netflix', 'spotify', 'gym', 'membership', 'icloud', 'prime', 'electricity', 'water'];
+    const subKeywords = ['netflix', 'spotify', 'gym', 'membership', 'icloud', 'prime', 'electricity', 'water', 'hotstar', 'youtube', 'apple'];
     const recurringSubs = expenses
       .filter((e) => subKeywords.some((kw) => (e.merchant || '').toLowerCase().includes(kw)))
       .map((e) => ({ merchant: e.merchant || 'Subscription', amount: e.amount }));
+
+    const parsedGoals = (goals || []).map((g: any) => ({
+      name: g.name,
+      targetAmount: g.targetAmount,
+      currentAmount: g.currentAmount,
+      currency: g.currency || 'INR',
+      percentage: g.targetAmount > 0 ? Math.min(100, Math.round((g.currentAmount / g.targetAmount) * 100)) : 0,
+    }));
 
     return {
       userId,
@@ -74,6 +95,7 @@ export class AiAdvisorService {
       categoryBreakdown,
       recentExpenses,
       recurringSubs,
+      goals: parsedGoals,
     };
   }
 
@@ -84,7 +106,31 @@ export class AiAdvisorService {
     const msg = userMessage.toLowerCase().trim();
     const prevAssistantMsg = history.filter((h) => h.role === 'assistant').slice(-1)[0]?.content.toLowerCase() || '';
 
-    // 1. Day / Time / Specific Date Queries (e.g. "what did I spend on Saturday", "show expenses on 13 Sep", "what did I buy today", "when did I spend on Starbucks")
+    // 0. Goals Query (e.g. "how are my goals", "savings targets", "emergency fund status")
+    if (msg.includes('goal') || msg.includes('target') || msg.includes('funds') || msg.includes('savings status')) {
+      if (ctx.goals.length === 0) {
+        return (
+          "🎯 **Savings Goals Tracker**:\n\n" +
+          "You haven't set up any savings targets yet! You can tap **Goals** in the bottom navigation bar to set targets like:\n" +
+          "• *Emergency Fund (₹50,000)*\n" +
+          "• *Vacation Trip (₹30,000)*\n" +
+          "• *New Laptop (₹80,000)*\n\n" +
+          "Setting visual targets accelerates savings by 3x through consistent micro-deposits!"
+        );
+      }
+
+      const goalsList = ctx.goals
+        .map((g) => `• 🏆 **${g.name}**: ${g.currency} ${g.currentAmount.toLocaleString()} / ${g.targetAmount.toLocaleString()} (**${g.percentage}%** completed)`)
+        .join('\n');
+
+      return (
+        `🎯 **Your Active Savings Goals Status**:\n\n` +
+        `${goalsList}\n\n` +
+        `💡 Tap on the **Goals** tab to make a new deposit or adjust target deadlines!`
+      );
+    }
+
+    // 1. Day / Time / Specific Date Queries
     const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const matchedDay = daysOfWeek.find((d) => msg.includes(d));
 
@@ -122,7 +168,7 @@ export class AiAdvisorService {
         "2. Scroll down to the **Monthly Budget Limits** section.\n" +
         "3. **Tap on any category** (e.g. *Food & Dining*, *Shopping*, or *Transportation*).\n" +
         "4. Enter your preferred monthly maximum (e.g. ₹5,000) and tap **Save Limit**.\n\n" +
-        "The app will automatically calculate your spending progress and turn **Green (Safe)**, **Yellow (Warning)**, or **Red (Over-budget)** in real time!"
+        "The app will automatically calculate your spending progress and turn **Green (Safe)**, **Yellow (Warning)**, or **Coral (Over-budget)** in real time!"
       );
     }
 
@@ -150,8 +196,8 @@ export class AiAdvisorService {
         `You currently have **${ctx.transactionCount} transactions** totaling **₹${ctx.totalSpent.toLocaleString()}**.\n\n` +
         `You can ask me questions like:\n` +
         `• *"What did I spend on Saturday or today?"*\n` +
-        `• *"Show what I bought at Starbucks and what time"*\n` +
-        `• *"Where am I overspending?"*\n` +
+        `• *"How can I save ₹5,000 this month?"*\n` +
+        `• *"How are my savings goals doing?"*\n` +
         `• *"Detect my recurring subscriptions"*`
       );
     }
@@ -248,10 +294,10 @@ export class AiAdvisorService {
 
     // 9. Natural fallback with itemized preview
     return (
-      `I can help you review your purchases by day and time.\n\n` +
+      `I can help you review your purchases by day and time or track your savings goals.\n\n` +
       `Here is a snapshot of your most recent transactions:\n` +
       `${ctx.recentExpenses.slice(0, 3).map((e) => `• **${e.merchant}** (₹${e.amount}) on **${e.dayOfWeek} at ${e.time}**`).join('\n')}\n\n` +
-      `You can ask me: *"What did I spend on Starbucks?"*, *"Show expenses on Saturday"*, or tap any card in your Transactions list to see full details!`
+      `You can ask me: *"What did I spend on Starbucks?"*, *"Show expenses on Saturday"*, or *"How are my savings goals?"*`
     );
   }
 }

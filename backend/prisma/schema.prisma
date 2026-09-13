@@ -17,6 +17,7 @@ model User {
   
   expenses       Expense[]
   bills          Bill[]
+  goals          Goal[]
   conversations  AIConversation[]
   notifications  Notification[]
 }
@@ -108,4 +109,22 @@ model Notification {
   isRead    Boolean  @default(false)
   
   createdAt DateTime @default(now())
+}
+
+model Goal {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name          String
+  targetAmount  Float
+  currentAmount Float     @default(0.0)
+  currency      String    @default("INR")
+  deadline      DateTime?
+  category      String?
+  color         String?   // Hex color code (e.g. 0xFF10B981)
+  icon          String?   // Icon name/identifier
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }

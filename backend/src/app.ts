@@ -21,6 +21,7 @@ import expenseRoutes from './routes/expense.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import billRoutes from './routes/bill.routes';
 import aiRoutes from './routes/ai.routes';
+import goalRoutes from './routes/goal.routes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -28,6 +29,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/bills', billRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/goals', goalRoutes);
 
 
 // Global Error Handler

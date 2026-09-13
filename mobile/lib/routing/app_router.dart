@@ -5,6 +5,7 @@ import '../features/auth/ui/register_screen.dart';
 import '../features/dashboard/ui/dashboard_screen.dart';
 import '../features/dashboard/ui/main_shell_screen.dart';
 import '../features/expenses/ui/expenses_screen.dart';
+import '../features/goals/ui/goals_screen.dart';
 import '../features/analytics/ui/analytics_screen.dart';
 import '../features/ai_assistant/ui/ai_chat_screen.dart';
 import '../features/profile/ui/profile_screen.dart';
@@ -49,7 +50,16 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 2: Analytics
+        // Tab 2: Goals
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/goals',
+              builder: (context, state) => const GoalsScreen(),
+            ),
+          ],
+        ),
+        // Tab 3: Analytics
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -58,7 +68,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 3: AI Assistant Chat
+        // Tab 4: AI Assistant Chat
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -67,7 +77,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 4: Profile
+        // Tab 5: Profile
         StatefulShellBranch(
           routes: [
             GoRoute(
