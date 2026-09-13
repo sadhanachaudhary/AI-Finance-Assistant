@@ -654,8 +654,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       }
     }
 
-    return RichText(
-      text: TextSpan(
+    return Text.rich(
+      TextSpan(
         style: const TextStyle(
           color: Color(0xFFF1F5F9),
           fontSize: 14.5,

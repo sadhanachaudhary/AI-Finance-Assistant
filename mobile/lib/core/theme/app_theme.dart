@@ -17,6 +17,10 @@ class AppTheme {
   static const Color outflowCoral = Color(0xFFFB7185); // Warm terracotta coral for spending
   static const Color warningAmber = Color(0xFFF59E0B); // Amber for budget warnings
 
+  // Typography tokens
+  static const Color textPrimary = Color(0xFFF8FAFC);
+  static const Color textSecondary = Color(0xFF94A3B8);
+
   // Tonal visualization family
   static const List<Color> chartTonalColors = [
     Color(0xFF3B82F6), // Trust Blue

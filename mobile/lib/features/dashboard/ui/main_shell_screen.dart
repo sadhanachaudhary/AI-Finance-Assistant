@@ -28,13 +28,32 @@ class MainShellScreen extends StatelessWidget {
             top: BorderSide(color: AppTheme.borderSlate, width: 1),
           ),
         ),
-        child: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
-          onDestinationSelected: (index) => _onTap(context, index),
-          backgroundColor: Colors.transparent,
-          indicatorColor: AppTheme.trustBlue.withValues(alpha: 0.18),
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          height: 65,
+        child: NavigationBarTheme(
+          data: NavigationBarThemeData(
+            labelTextStyle: WidgetStateProperty.resolveWith((states) {
+              final isSelected = states.contains(WidgetState.selected);
+              return TextStyle(
+                fontSize: 10.5,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? AppTheme.trustBlue : AppTheme.textSecondary,
+                letterSpacing: -0.2,
+              );
+            }),
+            iconTheme: WidgetStateProperty.resolveWith((states) {
+              final isSelected = states.contains(WidgetState.selected);
+              return IconThemeData(
+                size: 22,
+                color: isSelected ? AppTheme.trustBlue : AppTheme.textSecondary,
+              );
+            }),
+          ),
+          child: NavigationBar(
+            selectedIndex: navigationShell.currentIndex,
+            onDestinationSelected: (index) => _onTap(context, index),
+            backgroundColor: Colors.transparent,
+            indicatorColor: AppTheme.trustBlue.withValues(alpha: 0.18),
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            height: 68,
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.dashboard_outlined),
@@ -69,7 +88,8 @@ class MainShellScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
 
