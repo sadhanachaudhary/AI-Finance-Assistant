@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../storage/secure_storage.dart';
-import 'dart:io';
 
 class ApiClient {
   late final Dio dio;
@@ -8,11 +8,11 @@ class ApiClient {
 
   ApiClient() {
     // 10.0.2.2 is the special IP for Android emulators to connect to localhost.
-    // For iOS simulator or web, localhost works fine. We will use a simple check.
+    // For iOS simulator, web, or desktop, localhost works.
     String baseUrl = const String.fromEnvironment('API_URL', defaultValue: '');
     
     if (baseUrl.isEmpty) {
-      if (Platform.isAndroid) {
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
         baseUrl = 'http://10.0.2.2:3001/api';
       } else {
         baseUrl = 'http://localhost:3001/api';
