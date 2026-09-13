@@ -192,31 +192,34 @@ class ProfileScreen extends ConsumerWidget {
     required String trailing,
     required VoidCallback onTap,
   }) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: const Color(0xFF6C63FF).withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: const Color(0xFF6C63FF), size: 18),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            trailing,
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF6C63FF).withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
           ),
-          const SizedBox(width: 6),
-          const Icon(Icons.chevron_right, color: Colors.white24, size: 18),
-        ],
+          child: Icon(icon, color: const Color(0xFF6C63FF), size: 18),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              trailing,
+              style: const TextStyle(color: Colors.white54, fontSize: 13),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right, color: Colors.white24, size: 18),
+          ],
+        ),
+        onTap: onTap,
       ),
-      onTap: onTap,
     );
   }
 }

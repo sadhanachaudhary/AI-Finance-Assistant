@@ -215,30 +215,31 @@ class TransactionTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    if (categoryName != null) ...[
-                      Text(
-                        categoryName!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: effectiveColor,
-                          fontWeight: FontWeight.w500,
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      if (categoryName != null) ...[
+                        TextSpan(
+                          text: categoryName!,
+                          style: TextStyle(
+                            color: effectiveColor,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                      const Text(
-                        ' • ',
-                        style: TextStyle(fontSize: 12, color: Colors.white38),
+                        const TextSpan(
+                          text: ' • ',
+                          style: TextStyle(color: Colors.white38),
+                        ),
+                      ],
+                      TextSpan(
+                        text: Formatters.formatDate(date),
+                        style: const TextStyle(color: Colors.white38),
                       ),
                     ],
-                    Text(
-                      Formatters.formatDate(date),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.white38,
-                      ),
-                    ),
-                  ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12),
                 ),
                 if (notes != null && notes!.isNotEmpty) ...[
                   const SizedBox(height: 2),
