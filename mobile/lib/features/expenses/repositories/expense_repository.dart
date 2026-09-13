@@ -8,9 +8,36 @@ class ExpenseRepository {
 
   ExpenseRepository(this._apiClient);
 
-  Future<List<Expense>> getExpenses() async {
+  Future<List<Expense>> getExpenses({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? categoryId,
+    double? minAmount,
+    double? maxAmount,
+    String? search,
+    String? sortBy,
+    String? order,
+    int? page,
+    int? limit,
+  }) async {
     try {
-      final response = await _apiClient.dio.get('/expenses');
+      final queryParams = <String, dynamic>{
+        if (startDate != null) 'startDate': startDate.toIso8601String(),
+        if (endDate != null) 'endDate': endDate.toIso8601String(),
+        if (categoryId != null && categoryId.isNotEmpty) 'categoryId': categoryId,
+        if (minAmount != null) 'minAmount': minAmount,
+        if (maxAmount != null) 'maxAmount': maxAmount,
+        if (search != null && search.isNotEmpty) 'search': search,
+        if (sortBy != null) 'sortBy': sortBy,
+        if (order != null) 'order': order,
+        if (page != null) 'page': page,
+        if (limit != null) 'limit': limit,
+      };
+
+      final response = await _apiClient.dio.get(
+        '/expenses',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
       if (response.statusCode == 200 && response.data['status'] == 'success') {
         final list = response.data['data']['expenses'] as List;
         return list.map((json) => Expense.fromJson(json as Map<String, dynamic>)).toList();

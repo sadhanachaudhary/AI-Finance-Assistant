@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/formatters.dart';
 
 class TransactionTile extends StatelessWidget {
+  final String? id;
   final String title;
   final double amount;
   final String currency;
@@ -16,6 +17,7 @@ class TransactionTile extends StatelessWidget {
 
   const TransactionTile({
     super.key,
+    this.id,
     required this.title,
     required this.amount,
     this.currency = 'INR',
@@ -34,7 +36,7 @@ class TransactionTile extends StatelessWidget {
     final effectiveColor = categoryColor ?? (isExpense ? const Color(0xFF6C63FF) : const Color(0xFF03DAC6));
     final effectiveIcon = categoryIcon ?? (isExpense ? Icons.shopping_bag_outlined : Icons.account_balance_wallet_outlined);
 
-    Widget content = Container(
+    Widget tileContent = Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
@@ -130,36 +132,53 @@ class TransactionTile extends StatelessWidget {
       ),
     );
 
+    Widget interactiveContent = Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        splashColor: effectiveColor.withValues(alpha: 0.1),
+        highlightColor: effectiveColor.withValues(alpha: 0.05),
+        child: tileContent,
+      ),
+    );
+
     if (onDelete != null) {
+      final dismissKey = id != null 
+          ? ValueKey(id!) 
+          : ValueKey('${title}_${date.millisecondsSinceEpoch}_$amount');
+
       return Dismissible(
-        key: ValueKey('${title}_${date.millisecondsSinceEpoch}_$amount'),
+        key: dismissKey,
         direction: DismissDirection.endToStart,
         background: Container(
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: 20),
           decoration: BoxDecoration(
-            color: const Color(0xFFCF6679).withValues(alpha: 0.8),
+            color: const Color(0xFFCF6679).withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Icon(Icons.delete_outline, color: Colors.white, size: 26),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                'Delete',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              SizedBox(width: 8),
+              Icon(Icons.delete_outline, color: Colors.white, size: 24),
+            ],
+          ),
         ),
         onDismissed: (_) => onDelete!(),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: content,
-        ),
+        child: interactiveContent,
       );
     }
 
-    if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: content,
-      );
-    }
-
-    return content;
+    return interactiveContent;
   }
 }

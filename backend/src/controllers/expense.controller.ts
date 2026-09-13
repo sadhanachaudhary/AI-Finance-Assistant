@@ -56,18 +56,77 @@ export const createExpense = async (req: Request, res: Response, next: NextFunct
 export const getExpenses = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
+    const {
+      startDate,
+      endDate,
+      categoryId,
+      minAmount,
+      maxAmount,
+      search,
+      sortBy = 'date',
+      order = 'desc',
+      page,
+      limit,
+    } = req.query;
 
-    const expenses = await prisma.expense.findMany({
-      where: { userId },
-      orderBy: { date: 'desc' },
-      include: {
-        category: true,
-      },
-    });
+    const whereClause: any = { userId };
+
+    // Date filters
+    if (startDate || endDate) {
+      whereClause.date = {};
+      if (startDate) whereClause.date.gte = new Date(startDate as string);
+      if (endDate) whereClause.date.lte = new Date(endDate as string);
+    }
+
+    // Category filter
+    if (categoryId) {
+      whereClause.categoryId = categoryId as string;
+    }
+
+    // Amount range filter
+    if (minAmount !== undefined || maxAmount !== undefined) {
+      whereClause.amount = {};
+      if (minAmount !== undefined) whereClause.amount.gte = parseFloat(minAmount as string);
+      if (maxAmount !== undefined) whereClause.amount.lte = parseFloat(maxAmount as string);
+    }
+
+    // Search query on merchant or notes
+    if (search) {
+      const queryStr = search as string;
+      whereClause.OR = [
+        { merchant: { contains: queryStr, mode: 'insensitive' } },
+        { notes: { contains: queryStr, mode: 'insensitive' } },
+      ];
+    }
+
+    // Sorting
+    const validSortFields = ['date', 'amount', 'merchant', 'createdAt'];
+    const sortField = validSortFields.includes(sortBy as string) ? (sortBy as string) : 'date';
+    const sortOrder = (order as string)?.toLowerCase() === 'asc' ? 'asc' : 'desc';
+
+    // Pagination
+    const take = limit ? parseInt(limit as string, 10) : undefined;
+    const skip = page && limit ? (parseInt(page as string, 10) - 1) * take! : undefined;
+
+    const [totalCount, expenses] = await Promise.all([
+      prisma.expense.count({ where: whereClause }),
+      prisma.expense.findMany({
+        where: whereClause,
+        orderBy: { [sortField]: sortOrder },
+        take,
+        skip,
+        include: {
+          category: true,
+        },
+      }),
+    ]);
 
     res.status(200).json({
       status: 'success',
       results: expenses.length,
+      total: totalCount,
+      page: page ? parseInt(page as string, 10) : 1,
+      totalPages: limit ? Math.ceil(totalCount / parseInt(limit as string, 10)) : 1,
       data: { expenses },
     });
   } catch (error) {

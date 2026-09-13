@@ -279,6 +279,7 @@ class DashboardScreen extends ConsumerWidget {
                       itemBuilder: (context, index) {
                         final expense = recentExpenses[index];
                         return TransactionTile(
+                          id: expense.id,
                           title: expense.merchant ?? 'Expense',
                           amount: expense.amount,
                           currency: expense.currency,

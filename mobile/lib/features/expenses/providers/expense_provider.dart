@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../models/category_model.dart';
@@ -104,34 +105,151 @@ class ExpensesNotifier extends AsyncNotifier<List<Expense>> {
   }
 }
 
+// Filter & Sort Enums
+enum DateFilterPreset {
+  all('All Time'),
+  today('Today'),
+  thisWeek('This Week'),
+  thisMonth('This Month'),
+  lastMonth('Last Month'),
+  custom('Custom');
+
+  final String label;
+  const DateFilterPreset(this.label);
+}
+
+enum SortOption {
+  dateDesc('Newest First'),
+  dateAsc('Oldest First'),
+  amountDesc('Highest Amount'),
+  amountAsc('Lowest Amount'),
+  merchantAsc('Merchant (A-Z)');
+
+  final String label;
+  const SortOption(this.label);
+}
+
 // Filter States
 final selectedCategoryFilterProvider = StateProvider<String?>((ref) => null);
 final searchQueryProvider = StateProvider<String>((ref) => '');
+final dateFilterPresetProvider = StateProvider<DateFilterPreset>((ref) => DateFilterPreset.all);
+final customDateRangeProvider = StateProvider<DateTimeRange?>((ref) => null);
+final sortOptionProvider = StateProvider<SortOption>((ref) => SortOption.dateDesc);
+final minAmountFilterProvider = StateProvider<double?>((ref) => null);
+final maxAmountFilterProvider = StateProvider<double?>((ref) => null);
 
-// Filtered Expenses
+// Active Filters Count (for badge indication)
+final activeFiltersCountProvider = Provider<int>((ref) {
+  int count = 0;
+  if (ref.watch(selectedCategoryFilterProvider) != null) count++;
+  if (ref.watch(dateFilterPresetProvider) != DateFilterPreset.all) count++;
+  if (ref.watch(sortOptionProvider) != SortOption.dateDesc) count++;
+  if (ref.watch(minAmountFilterProvider) != null) count++;
+  if (ref.watch(maxAmountFilterProvider) != null) count++;
+  return count;
+});
+
+// Filtered & Sorted Expenses
 final filteredExpensesProvider = Provider<List<Expense>>((ref) {
   final expenses = ref.watch(expensesProvider).value ?? [];
   final selectedCat = ref.watch(selectedCategoryFilterProvider);
   final query = ref.watch(searchQueryProvider).toLowerCase().trim();
+  final datePreset = ref.watch(dateFilterPresetProvider);
+  final customRange = ref.watch(customDateRangeProvider);
+  final sortOption = ref.watch(sortOptionProvider);
+  final minAmount = ref.watch(minAmountFilterProvider);
+  final maxAmount = ref.watch(maxAmountFilterProvider);
 
-  return expenses.where((e) {
-    final matchesCategory = selectedCat == null || e.categoryId == selectedCat;
-    final matchesSearch = query.isEmpty ||
-        (e.merchant?.toLowerCase().contains(query) ?? false) ||
-        (e.notes?.toLowerCase().contains(query) ?? false) ||
-        (e.category?.name.toLowerCase().contains(query) ?? false);
-    return matchesCategory && matchesSearch;
+  final now = DateTime.now();
+
+  final filtered = expenses.where((e) {
+    // Category match
+    if (selectedCat != null && e.categoryId != selectedCat) {
+      return false;
+    }
+
+    // Search query match
+    if (query.isNotEmpty) {
+      final matchesSearch = (e.merchant?.toLowerCase().contains(query) ?? false) ||
+          (e.notes?.toLowerCase().contains(query) ?? false) ||
+          (e.category?.name.toLowerCase().contains(query) ?? false);
+      if (!matchesSearch) return false;
+    }
+
+    // Amount range match
+    if (minAmount != null && e.amount < minAmount) return false;
+    if (maxAmount != null && e.amount > maxAmount) return false;
+
+    // Date range match
+    switch (datePreset) {
+      case DateFilterPreset.all:
+        break;
+      case DateFilterPreset.today:
+        if (e.date.year != now.year || e.date.month != now.month || e.date.day != now.day) {
+          return false;
+        }
+        break;
+      case DateFilterPreset.thisWeek:
+        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        final startOfDay = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+        if (e.date.isBefore(startOfDay)) return false;
+        break;
+      case DateFilterPreset.thisMonth:
+        if (e.date.year != now.year || e.date.month != now.month) {
+          return false;
+        }
+        break;
+      case DateFilterPreset.lastMonth:
+        final lastMonth = now.month == 1 ? 12 : now.month - 1;
+        final lastMonthYear = now.month == 1 ? now.year - 1 : now.year;
+        if (e.date.year != lastMonthYear || e.date.month != lastMonth) {
+          return false;
+        }
+        break;
+      case DateFilterPreset.custom:
+        if (customRange != null) {
+          final start = DateTime(customRange.start.year, customRange.start.month, customRange.start.day);
+          final end = DateTime(customRange.end.year, customRange.end.month, customRange.end.day, 23, 59, 59);
+          if (e.date.isBefore(start) || e.date.isAfter(end)) {
+            return false;
+          }
+        }
+        break;
+    }
+
+    return true;
   }).toList();
+
+  // Sorting
+  switch (sortOption) {
+    case SortOption.dateDesc:
+      filtered.sort((a, b) => b.date.compareTo(a.date));
+      break;
+    case SortOption.dateAsc:
+      filtered.sort((a, b) => a.date.compareTo(b.date));
+      break;
+    case SortOption.amountDesc:
+      filtered.sort((a, b) => b.amount.compareTo(a.amount));
+      break;
+    case SortOption.amountAsc:
+      filtered.sort((a, b) => a.amount.compareTo(b.amount));
+      break;
+    case SortOption.merchantAsc:
+      filtered.sort((a, b) => (a.merchant ?? '').compareTo(b.merchant ?? ''));
+      break;
+  }
+
+  return filtered;
 });
 
 // Summary Metrics Providers
 final totalSpendProvider = Provider<double>((ref) {
-  final expenses = ref.watch(expensesProvider).value ?? [];
+  final expenses = ref.watch(filteredExpensesProvider);
   return expenses.fold<double>(0.0, (sum, item) => sum + item.amount);
 });
 
 final categorySpendMapProvider = Provider<Map<String, double>>((ref) {
-  final expenses = ref.watch(expensesProvider).value ?? [];
+  final expenses = ref.watch(filteredExpensesProvider);
   final map = <String, double>{};
 
   for (final exp in expenses) {
