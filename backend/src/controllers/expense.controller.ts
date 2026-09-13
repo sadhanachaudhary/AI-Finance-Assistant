@@ -137,7 +137,7 @@ export const getExpenses = async (req: Request, res: Response, next: NextFunctio
 export const getExpense = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const expense = await prisma.expense.findFirst({
       where: { id, userId },
@@ -160,7 +160,7 @@ export const getExpense = async (req: Request, res: Response, next: NextFunction
 export const updateExpense = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { amount, currency, date, merchant, notes, categoryId } = req.body;
 
     // Verify ownership
@@ -187,7 +187,7 @@ export const updateExpense = async (req: Request, res: Response, next: NextFunct
 export const deleteExpense = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     // Verify ownership
     const existing = await prisma.expense.findFirst({ where: { id, userId } });

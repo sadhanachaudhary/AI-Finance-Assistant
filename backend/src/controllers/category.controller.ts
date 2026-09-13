@@ -60,7 +60,7 @@ export const getCategories = async (req: Request, res: Response, next: NextFunct
 
 export const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { name, icon, color } = req.body;
 
     const category = await prisma.category.update({
@@ -79,7 +79,7 @@ export const updateCategory = async (req: Request, res: Response, next: NextFunc
 
 export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     await prisma.category.delete({
       where: { id },

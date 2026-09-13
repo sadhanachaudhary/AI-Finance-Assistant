@@ -100,9 +100,81 @@ export class AiAdvisorService {
   }
 
   /**
+   * Calls Google Gemini 1.5 Flash API with user financial context
+   */
+  private static async callGeminiApi(userMessage: string, history: Array<{ role: string; content: string }>, ctx: ChatContext): Promise<string | null> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey.trim().length === 0) return null;
+
+    try {
+      const systemPrompt = `You are a calm, expert, empathetic AI Financial Advisor inside the AI Finance Assistant app.
+User's Live Financial Snapshot:
+- Total Spent This Month: ${ctx.totalSpent} INR across ${ctx.transactionCount} transactions
+- Top Spending Categories: ${JSON.stringify(ctx.categoryBreakdown)}
+- Recent Transactions (with date, day, time, notes): ${JSON.stringify(ctx.recentExpenses.slice(0, 15))}
+- Detected Subscriptions: ${JSON.stringify(ctx.recurringSubs)}
+- Active Savings Goals: ${JSON.stringify(ctx.goals)}
+
+Guidelines:
+1. Always be encouraging, actionable, and calm (reduce financial anxiety).
+2. Use specific figures, merchant names, days, and times from the user's data when relevant.
+3. Format output in clean GitHub markdown with bold key figures and bullet points.
+4. If asked how to save money, provide a realistic multi-step reduction plan based on their real category spending.`;
+
+      const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [
+        { role: 'user', parts: [{ text: `[System Financial Context]\n${systemPrompt}` }] },
+        { role: 'model', parts: [{ text: "Understood. I have access to your live financial snapshot and am ready to provide personalized, actionable financial advice." }] },
+      ];
+
+      for (const h of history.slice(-4)) {
+        contents.push({
+          role: h.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: h.content }],
+        });
+      }
+
+      contents.push({
+        role: 'user',
+        parts: [{ text: userMessage }],
+      });
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 800,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const data: any = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text && typeof text === 'string' && text.trim().length > 0) {
+          return text.trim();
+        }
+      }
+    } catch (err) {
+      console.warn('Gemini API call failed, using heuristic advisor fallback:', err);
+    }
+    return null;
+  }
+
+  /**
    * Generates intelligent, responsive financial answer based on message and user ledger.
    */
   static async generateAnswer(userMessage: string, history: Array<{ role: string; content: string }>, ctx: ChatContext): Promise<string> {
+    // 1. Try Live Gemini Generative AI first if API Key is configured
+    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 5) {
+      const geminiReply = await AiAdvisorService.callGeminiApi(userMessage, history, ctx);
+      if (geminiReply) return geminiReply;
+    }
+
     const msg = userMessage.toLowerCase().trim();
     const prevAssistantMsg = history.filter((h) => h.role === 'assistant').slice(-1)[0]?.content.toLowerCase() || '';
 
