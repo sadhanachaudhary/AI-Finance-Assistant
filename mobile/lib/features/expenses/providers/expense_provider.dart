@@ -129,14 +129,62 @@ enum SortOption {
   const SortOption(this.label);
 }
 
-// Filter States
-final selectedCategoryFilterProvider = StateProvider<String?>((ref) => null);
-final searchQueryProvider = StateProvider<String>((ref) => '');
-final dateFilterPresetProvider = StateProvider<DateFilterPreset>((ref) => DateFilterPreset.all);
-final customDateRangeProvider = StateProvider<DateTimeRange?>((ref) => null);
-final sortOptionProvider = StateProvider<SortOption>((ref) => SortOption.dateDesc);
-final minAmountFilterProvider = StateProvider<double?>((ref) => null);
-final maxAmountFilterProvider = StateProvider<double?>((ref) => null);
+// Filter States using Notifiers
+class SelectedCategoryFilterNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+  @override
+  set state(String? val) => super.state = val;
+}
+final selectedCategoryFilterProvider = NotifierProvider<SelectedCategoryFilterNotifier, String?>(SelectedCategoryFilterNotifier.new);
+
+class SearchQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+  @override
+  set state(String val) => super.state = val;
+}
+final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(SearchQueryNotifier.new);
+
+class DateFilterPresetNotifier extends Notifier<DateFilterPreset> {
+  @override
+  DateFilterPreset build() => DateFilterPreset.all;
+  @override
+  set state(DateFilterPreset val) => super.state = val;
+}
+final dateFilterPresetProvider = NotifierProvider<DateFilterPresetNotifier, DateFilterPreset>(DateFilterPresetNotifier.new);
+
+class CustomDateRangeNotifier extends Notifier<DateTimeRange?> {
+  @override
+  DateTimeRange? build() => null;
+  @override
+  set state(DateTimeRange? val) => super.state = val;
+}
+final customDateRangeProvider = NotifierProvider<CustomDateRangeNotifier, DateTimeRange?>(CustomDateRangeNotifier.new);
+
+class SortOptionNotifier extends Notifier<SortOption> {
+  @override
+  SortOption build() => SortOption.dateDesc;
+  @override
+  set state(SortOption val) => super.state = val;
+}
+final sortOptionProvider = NotifierProvider<SortOptionNotifier, SortOption>(SortOptionNotifier.new);
+
+class MinAmountFilterNotifier extends Notifier<double?> {
+  @override
+  double? build() => null;
+  @override
+  set state(double? val) => super.state = val;
+}
+final minAmountFilterProvider = NotifierProvider<MinAmountFilterNotifier, double?>(MinAmountFilterNotifier.new);
+
+class MaxAmountFilterNotifier extends Notifier<double?> {
+  @override
+  double? build() => null;
+  @override
+  set state(double? val) => super.state = val;
+}
+final maxAmountFilterProvider = NotifierProvider<MaxAmountFilterNotifier, double?>(MaxAmountFilterNotifier.new);
 
 // Active Filters Count (for badge indication)
 final activeFiltersCountProvider = Provider<int>((ref) {

@@ -1,7 +1,7 @@
 class Formatters {
   /// Formats a number as currency (e.g. ₹1,250.00 or $1,250.00)
   static String formatCurrency(double amount, {String currency = 'INR'}) {
-    final symbol = currency == 'INR' ? '₹' : (currency == 'USD' ? '$' : '$currency ');
+    final symbol = currency == 'INR' ? '₹' : (currency == 'USD' ? r'$' : '$currency ');
     final isNegative = amount < 0;
     final absAmount = amount.abs();
     

@@ -4,7 +4,6 @@ import '../../../shared/utils/formatters.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/category_chip.dart';
-import '../models/category_model.dart';
 import '../providers/expense_provider.dart';
 
 class AddExpenseSheet extends ConsumerStatefulWidget {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/utils/formatters.dart';
-import '../../../shared/widgets/app_card.dart';
 import '../../expenses/providers/expense_provider.dart';
 
 class ChatMessage {

@@ -32,7 +32,7 @@ class MainShellScreen extends StatelessWidget {
           onDestinationSelected: (index) => _onTap(context, index),
           backgroundColor: Colors.transparent,
           indicatorColor: const Color(0xFF6C63FF).withValues(alpha: 0.2),
-          labelBehavior: NavigationBarDestinationLabelBehavior.alwaysShow,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           height: 65,
           destinations: const [
             NavigationDestination(

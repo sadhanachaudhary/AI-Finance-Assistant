@@ -43,7 +43,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     final filteredExpenses = ref.watch(filteredExpensesProvider);
     final selectedCat = ref.watch(selectedCategoryFilterProvider);
     final selectedDatePreset = ref.watch(dateFilterPresetProvider);
-    final selectedSortOption = ref.watch(sortOptionProvider);
     final activeFiltersCount = ref.watch(activeFiltersCountProvider);
     final totalSpend = ref.watch(totalSpendProvider);
 
