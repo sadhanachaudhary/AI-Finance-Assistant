@@ -304,13 +304,74 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0B0F19),
       appBar: AppBar(
-        title: const Row(
+        backgroundColor: const Color(0xFF0B0F19),
+        elevation: 0,
+        titleSpacing: 0,
+        title: Row(
           children: [
-            Icon(Icons.auto_awesome_rounded, color: Color(0xFF03DAC6), size: 22),
-            SizedBox(width: 8),
-            Text('AI Financial Advisor'),
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2563EB), Color(0xFF06B6D4)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'AI Financial Advisor',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF10B981),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    const Text(
+                      'Gemini Live • Online',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: Color(0xFF94A3B8),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ],
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: const Color(0xFF1E293B), height: 1),
         ),
       ),
       body: Column(
@@ -319,7 +380,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
@@ -333,10 +394,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E1E),
-                      borderRadius: BorderRadius.circular(12),
+                      color: const Color(0xFF1E293B),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF334155)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -344,10 +406,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         SizedBox(
                           width: 14,
                           height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF03DAC6)),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF38BDF8)),
                         ),
-                        SizedBox(width: 8),
-                        Text('AI Advisor is thinking...', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                        SizedBox(width: 10),
+                        Text(
+                          'Advisor is formulating insights...',
+                          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
                       ],
                     ),
                   ),
@@ -356,8 +421,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             ),
           // Quick prompt chips
           Container(
-            height: 42,
-            margin: const EdgeInsets.only(bottom: 8),
+            height: 44,
+            margin: const EdgeInsets.only(bottom: 10),
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -367,17 +432,23 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 final prompt = _suggestedPrompts[index];
                 return InkWell(
                   onTap: () => _sendMessage(prompt),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(22),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E2C),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFF2C2C3E)),
+                      color: const Color(0xFF131D31),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.35)),
                     ),
-                    child: Text(
-                      prompt,
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF03DAC6), fontWeight: FontWeight.w500),
+                    child: Center(
+                      child: Text(
+                        prompt,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: Color(0xFF93C5FD),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 );
@@ -388,8 +459,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
-              color: Color(0xFF14141E),
-              border: Border(top: BorderSide(color: Color(0xFF2C2C3E), width: 1)),
+              color: Color(0xFF0F172A),
+              border: Border(top: BorderSide(color: Color(0xFF1E293B), width: 1)),
             ),
             child: SafeArea(
               child: Row(
@@ -397,18 +468,18 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E1E2C),
+                        color: const Color(0xFF1E293B),
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0xFF2C2C3E)),
+                        border: Border.all(color: const Color(0xFF334155)),
                       ),
                       child: TextField(
                         controller: _textController,
-                        style: const TextStyle(color: Colors.white, fontSize: 15),
+                        style: const TextStyle(color: Colors.white, fontSize: 14.5),
                         textInputAction: TextInputAction.send,
                         onSubmitted: _sendMessage,
                         decoration: const InputDecoration(
-                          hintText: 'Ask financial question or forecast...',
-                          hintStyle: TextStyle(color: Colors.white38, fontSize: 14),
+                          hintText: 'Ask financial questions, prioritize subs, or budget...',
+                          hintStyle: TextStyle(color: Color(0xFF64748B), fontSize: 13.5),
                           contentPadding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
@@ -419,11 +490,22 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   ),
                   const SizedBox(width: 10),
                   Container(
-                    decoration: const BoxDecoration(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF6C63FF), Color(0xFF03DAC6)],
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF2563EB).withValues(alpha: 0.4),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: IconButton(
                       icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
@@ -452,18 +534,32 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF6C63FF), Color(0xFF8B80F9)],
+                    colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(18),
-                    topRight: Radius.circular(18),
-                    bottomLeft: Radius.circular(18),
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                    bottomLeft: Radius.circular(20),
                     bottomRight: Radius.circular(4),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Text(
                   msg.text,
-                  style: const TextStyle(color: Colors.white, fontSize: 14.5),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
                 ),
               ),
             ),
@@ -473,42 +569,121 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 32,
-            height: 32,
-            margin: const EdgeInsets.only(right: 10, top: 4),
+            width: 34,
+            height: 34,
+            margin: const EdgeInsets.only(right: 10, top: 2),
             decoration: BoxDecoration(
-              color: const Color(0xFF03DAC6).withValues(alpha: 0.15),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0284C7), Color(0xFF06B6D4)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0284C7).withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF03DAC6), size: 18),
+            child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 18),
           ),
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E1E2C),
+                color: const Color(0xFF1E293B),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(4),
-                  topRight: Radius.circular(18),
-                  bottomLeft: Radius.circular(18),
-                  bottomRight: Radius.circular(18),
+                  topRight: Radius.circular(20),
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
                 ),
-                border: Border.all(color: const Color(0xFF2C2C3E)),
+                border: Border.all(color: const Color(0xFF334155)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Text(
-                msg.text,
-                style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.45),
-              ),
+              child: _buildFormattedText(msg.text),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildFormattedText(String content) {
+    final spans = <TextSpan>[];
+    final lines = content.split('\n');
+
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i];
+
+      if (line.startsWith('### ') || line.startsWith('## ') || line.startsWith('# ')) {
+        final headingText = line.replaceAll(RegExp(r'^#+\s*'), '');
+        spans.add(
+          TextSpan(
+            text: '$headingText\n',
+            style: const TextStyle(
+              color: Color(0xFF60A5FA),
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              height: 1.6,
+            ),
+          ),
+        );
+      } else if (line.trim().startsWith('•') || line.trim().startsWith('-') || line.trim().startsWith('*')) {
+        _parseInlineMarkdown(line, spans, isBullet: true);
+        spans.add(const TextSpan(text: '\n'));
+      } else {
+        _parseInlineMarkdown(line, spans, isBullet: false);
+        if (i < lines.length - 1) {
+          spans.add(const TextSpan(text: '\n'));
+        }
+      }
+    }
+
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(
+          color: Color(0xFFF1F5F9),
+          fontSize: 14.5,
+          height: 1.5,
+          letterSpacing: 0.1,
+        ),
+        children: spans,
+      ),
+    );
+  }
+
+  void _parseInlineMarkdown(String text, List<TextSpan> spans, {bool isBullet = false}) {
+    final parts = text.split('**');
+    for (int j = 0; j < parts.length; j++) {
+      final part = parts[j];
+      if (part.isEmpty) continue;
+
+      final isBold = j % 2 == 1;
+      spans.add(
+        TextSpan(
+          text: part,
+          style: TextStyle(
+            color: isBold ? Colors.white : const Color(0xFFE2E8F0),
+            fontWeight: isBold ? FontWeight.w700 : FontWeight.w400,
+            fontSize: 14.5,
+          ),
+        ),
+      );
+    }
   }
 }
