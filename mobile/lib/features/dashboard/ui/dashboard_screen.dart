@@ -9,6 +9,8 @@ import '../../../shared/widgets/transaction_tile.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../expenses/providers/expense_provider.dart';
 import '../../expenses/ui/add_expense_sheet.dart';
+import '../../expenses/ui/smart_ingest_sheet.dart';
+import '../../profile/ui/privacy_security_sheet.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -141,26 +143,33 @@ class DashboardScreen extends ConsumerWidget {
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF03DAC6).withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.shield_outlined, size: 13, color: Color(0xFF03DAC6)),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'AI Budget Tracking Active',
-                                    style: TextStyle(
-                                      color: Color(0xFF03DAC6),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
+                            InkWell(
+                              onTap: () => PrivacySecuritySheet.show(context),
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF03DAC6).withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: const Color(0xFF03DAC6).withValues(alpha: 0.3)),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.shield_outlined, size: 13, color: Color(0xFF03DAC6)),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      'Zero-Trust Privacy Shield Active',
+                                      style: TextStyle(
+                                        color: Color(0xFF03DAC6),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                    SizedBox(width: 4),
+                                    Icon(Icons.chevron_right, size: 13, color: Color(0xFF03DAC6)),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -209,20 +218,16 @@ class DashboardScreen extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _QuickActionButton(
+                        icon: Icons.auto_awesome,
+                        label: 'Auto-Track',
+                        color: const Color(0xFF03DAC6),
+                        onTap: () => SmartIngestSheet.show(context),
+                      ),
+                      _QuickActionButton(
                         icon: Icons.add_rounded,
                         label: 'Add Expense',
                         color: const Color(0xFF6C63FF),
                         onTap: () => AddExpenseSheet.show(context),
-                      ),
-                      _QuickActionButton(
-                        icon: Icons.document_scanner_outlined,
-                        label: 'Scan Bill',
-                        color: const Color(0xFF03DAC6),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Receipt scanner coming soon')),
-                          );
-                        },
                       ),
                       _QuickActionButton(
                         icon: Icons.chat_bubble_outline_rounded,

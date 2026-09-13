@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import '../../../networking/api_client.dart';
 import '../models/expense_model.dart';
 import '../models/category_model.dart';

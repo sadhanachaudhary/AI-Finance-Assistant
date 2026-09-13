@@ -5,6 +5,8 @@ import {
   getExpense,
   updateExpense,
   deleteExpense,
+  parseTransaction,
+  autoCategorize,
   createExpenseSchema,
   updateExpenseSchema,
 } from '../controllers/expense.controller';
@@ -15,6 +17,9 @@ const router = Router();
 
 // Protect all expense routes
 router.use(authMiddleware);
+
+router.post('/parse-transaction', parseTransaction);
+router.post('/auto-categorize', autoCategorize);
 
 router
   .route('/')

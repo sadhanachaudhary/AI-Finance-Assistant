@@ -205,3 +205,70 @@ export const deleteExpense = async (req: Request, res: Response, next: NextFunct
     next(error);
   }
 };
+
+export const parseTransaction = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ status: 'fail', message: 'Text is required' });
+    }
+
+    const { SmartParserService } = await import('../services/smart-parser.service');
+    
+    // Check if OTP
+    if (SmartParserService.isSensitiveOtpMessage(text)) {
+      return res.status(422).json({
+        status: 'fail',
+        message: 'Sensitive message discarded (OTP / security code detected for user privacy)',
+        isSensitiveDiscarded: true,
+      });
+    }
+
+    const parsed = SmartParserService.parseTransactionText(text);
+    if (!parsed) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Could not extract valid transaction details from the provided text',
+      });
+    }
+
+    // Match with user's categories in the DB
+    const category = await prisma.category.findFirst({
+      where: { name: { equals: parsed.categoryName, mode: 'insensitive' } },
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        transaction: {
+          ...parsed,
+          categoryId: category?.id || null,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const autoCategorize = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { merchant, notes } = req.body;
+    const { SmartParserService } = await import('../services/smart-parser.service');
+    const categoryName = SmartParserService.categorize(merchant, notes);
+
+    const category = await prisma.category.findFirst({
+      where: { name: { equals: categoryName, mode: 'insensitive' } },
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        categoryName,
+        categoryId: category?.id || null,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

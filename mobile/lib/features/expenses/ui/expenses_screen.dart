@@ -8,6 +8,7 @@ import '../../../shared/widgets/transaction_tile.dart';
 import '../providers/expense_provider.dart';
 import 'add_expense_sheet.dart';
 import 'filter_bottom_sheet.dart';
+import 'smart_ingest_sheet.dart';
 
 class ExpensesScreen extends ConsumerStatefulWidget {
   const ExpensesScreen({super.key});
@@ -50,6 +51,16 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       appBar: AppBar(
         title: const Text('Expenses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome, color: Color(0xFF03DAC6)),
+            tooltip: 'Smart Auto-Track',
+            onPressed: () => SmartIngestSheet.show(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add_rounded),
+            tooltip: 'Add Expense',
+            onPressed: () => AddExpenseSheet.show(context),
+          ),
           // Filter & Sort Button with Badge
           Stack(
             alignment: Alignment.center,
