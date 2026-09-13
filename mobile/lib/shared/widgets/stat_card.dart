@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import '../utils/formatters.dart';
 import 'app_card.dart';
 
@@ -18,7 +19,7 @@ class StatCard extends StatelessWidget {
     required this.amount,
     this.currency = 'INR',
     required this.icon,
-    this.accentColor = const Color(0xFF6C63FF),
+    this.accentColor = AppTheme.trustBlue,
     this.trendPercent,
     this.subtitle,
     this.onTap,
@@ -49,8 +50,8 @@ class StatCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: (trendPercent! >= 0
-                            ? const Color(0xFF03DAC6)
-                            : const Color(0xFFCF6679))
+                            ? AppTheme.inflowGreen
+                            : AppTheme.outflowCoral)
                         .withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -62,17 +63,17 @@ class StatCard extends StatelessWidget {
                             ? Icons.trending_up_rounded
                             : Icons.trending_down_rounded,
                         color: trendPercent! >= 0
-                            ? const Color(0xFF03DAC6)
-                            : const Color(0xFFCF6679),
+                            ? AppTheme.inflowGreen
+                            : AppTheme.outflowCoral,
                         size: 14,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         Formatters.formatPercentage(trendPercent!),
-                        style: TextStyle(
+                        style: AppTheme.tabularNumbers(
                           color: trendPercent! >= 0
-                              ? const Color(0xFF03DAC6)
-                              : const Color(0xFFCF6679),
+                              ? AppTheme.inflowGreen
+                              : AppTheme.outflowCoral,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -97,7 +98,7 @@ class StatCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 Formatters.formatCurrency(amount, currency: currency),
-                style: const TextStyle(
+                style: AppTheme.tabularNumbers(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

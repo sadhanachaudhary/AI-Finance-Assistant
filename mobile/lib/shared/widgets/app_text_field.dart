@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 
 class AppTextField extends StatefulWidget {
   final TextEditingController? controller;
@@ -83,7 +84,7 @@ class _AppTextFieldState extends State<AppTextField> {
               fontSize: 15,
             ),
             filled: true,
-            fillColor: const Color(0xFF1E1E1E),
+            fillColor: AppTheme.surfaceSlate,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 18,
               vertical: 16,
@@ -111,23 +112,23 @@ class _AppTextFieldState extends State<AppTextField> {
                 : widget.suffix,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFF2C2C2C), width: 1),
+              borderSide: const BorderSide(color: AppTheme.borderSlate, width: 1),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFF2C2C2C), width: 1),
+              borderSide: const BorderSide(color: AppTheme.borderSlate, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 1.8),
+              borderSide: const BorderSide(color: AppTheme.trustBlue, width: 1.8),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFCF6679), width: 1.5),
+              borderSide: const BorderSide(color: AppTheme.outflowCoral, width: 1.5),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFCF6679), width: 2),
+              borderSide: const BorderSide(color: AppTheme.outflowCoral, width: 2),
             ),
           ),
         ),

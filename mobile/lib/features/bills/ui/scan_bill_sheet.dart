@@ -472,7 +472,7 @@ class _ScanBillSheetState extends ConsumerState<ScanBillSheet> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: categories.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 6),
+                  separatorBuilder: (context, index) => const SizedBox(width: 6),
                   itemBuilder: (context, index) {
                     final cat = categories[index];
                     final isSelected = _selectedCategoryId == cat.id;

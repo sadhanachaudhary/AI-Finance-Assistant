@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/utils/formatters.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_states.dart';
@@ -42,10 +43,10 @@ class DashboardScreen extends ConsumerWidget {
             Container(
               width: 38,
               height: 38,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6C63FF), Color(0xFF03DAC6)],
+                gradient: LinearGradient(
+                  colors: [AppTheme.trustBlue, AppTheme.trustTeal],
                 ),
               ),
               child: Center(
@@ -96,8 +97,8 @@ class DashboardScreen extends ConsumerWidget {
               await ref.read(expensesProvider.notifier).refresh();
               await ref.read(categoriesProvider.notifier).refresh();
             },
-            color: const Color(0xFF6C63FF),
-            backgroundColor: const Color(0xFF1E1E1E),
+            color: AppTheme.trustBlue,
+            backgroundColor: AppTheme.surfaceSlate,
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Column(
@@ -107,8 +108,8 @@ class DashboardScreen extends ConsumerWidget {
                   GlassCard(
                     padding: const EdgeInsets.all(22),
                     gradientColors: const [
-                      Color(0xFF382A6E),
-                      Color(0xFF1A1A2E),
+                      Color(0xFF1E293B),
+                      Color(0xFF0F172A),
                     ],
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,7 +127,7 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                             Icon(
                               Icons.auto_graph_rounded,
-                              color: Color(0xFF03DAC6),
+                              color: AppTheme.inflowGreen,
                               size: 22,
                             ),
                           ],
@@ -134,9 +135,9 @@ class DashboardScreen extends ConsumerWidget {
                         const SizedBox(height: 10),
                         Text(
                           Formatters.formatCurrency(totalSpend),
-                          style: const TextStyle(
+                          style: AppTheme.tabularNumbers(
                             color: Colors.white,
-                            fontSize: 32,
+                            fontSize: 34,
                             fontWeight: FontWeight.bold,
                             letterSpacing: -0.5,
                           ),
@@ -150,25 +151,25 @@ class DashboardScreen extends ConsumerWidget {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF03DAC6).withValues(alpha: 0.18),
+                                  color: AppTheme.inflowGreen.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: const Color(0xFF03DAC6).withValues(alpha: 0.3)),
+                                  border: Border.all(color: AppTheme.inflowGreen.withValues(alpha: 0.3)),
                                 ),
                                 child: const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.shield_outlined, size: 13, color: Color(0xFF03DAC6)),
+                                    Icon(Icons.shield_outlined, size: 13, color: AppTheme.inflowGreen),
                                     SizedBox(width: 5),
                                     Text(
                                       'Zero-Trust Privacy Shield Active',
                                       style: TextStyle(
-                                        color: Color(0xFF03DAC6),
+                                        color: AppTheme.inflowGreen,
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                     SizedBox(width: 4),
-                                    Icon(Icons.chevron_right, size: 13, color: Color(0xFF03DAC6)),
+                                    Icon(Icons.chevron_right, size: 13, color: AppTheme.inflowGreen),
                                   ],
                                 ),
                               ),
@@ -188,7 +189,7 @@ class DashboardScreen extends ConsumerWidget {
                           amount: topCategoryAmount,
                           subtitle: topCategory,
                           icon: Icons.pie_chart_outline_rounded,
-                          accentColor: const Color(0xFFFF9800),
+                          accentColor: AppTheme.warningAmber,
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -199,7 +200,7 @@ class DashboardScreen extends ConsumerWidget {
                           currency: '',
                           subtitle: 'Total records',
                           icon: Icons.receipt_long_rounded,
-                          accentColor: const Color(0xFF03DAC6),
+                          accentColor: AppTheme.trustBlue,
                         ),
                       ),
                     ],
@@ -222,35 +223,35 @@ class DashboardScreen extends ConsumerWidget {
                         _QuickActionButton(
                           icon: Icons.auto_awesome,
                           label: 'Auto-Track',
-                          color: const Color(0xFF03DAC6),
+                          color: AppTheme.trustTeal,
                           onTap: () => SmartIngestSheet.show(context),
                         ),
                         const SizedBox(width: 10),
                         _QuickActionButton(
                           icon: Icons.document_scanner_rounded,
                           label: 'Scan Bill',
-                          color: const Color(0xFF6C63FF),
+                          color: AppTheme.trustBlue,
                           onTap: () => ScanBillSheet.show(context),
                         ),
                         const SizedBox(width: 10),
                         _QuickActionButton(
                           icon: Icons.add_rounded,
                           label: 'Add Expense',
-                          color: const Color(0xFF42A5F5),
+                          color: const Color(0xFF38BDF8),
                           onTap: () => AddExpenseSheet.show(context),
                         ),
                         const SizedBox(width: 10),
                         _QuickActionButton(
                           icon: Icons.chat_bubble_outline_rounded,
                           label: 'Ask AI',
-                          color: const Color(0xFFFFB74D),
+                          color: AppTheme.warningAmber,
                           onTap: () => context.go('/ai'),
                         ),
                         const SizedBox(width: 10),
                         _QuickActionButton(
                           icon: Icons.insights_rounded,
                           label: 'Budgets',
-                          color: const Color(0xFFE91E63),
+                          color: const Color(0xFFEC4899),
                           onTap: () => context.go('/analytics'),
                         ),
                       ],
@@ -273,7 +274,7 @@ class DashboardScreen extends ConsumerWidget {
                         onPressed: () => context.go('/expenses'),
                         child: const Text(
                           'See All',
-                          style: TextStyle(color: Color(0xFF6C63FF), fontWeight: FontWeight.bold),
+                          style: TextStyle(color: AppTheme.trustBlue, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -292,7 +293,7 @@ class DashboardScreen extends ConsumerWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: recentExpenses.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      separatorBuilder: (context, index) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final expense = recentExpenses[index];
                         return TransactionTile(
@@ -341,9 +342,9 @@ class _QuickActionButton extends StatelessWidget {
         width: 78,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: AppTheme.surfaceSlate,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF2C2C2C), width: 1),
+          border: Border.all(color: AppTheme.borderSlate, width: 1),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

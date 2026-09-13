@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/utils/formatters.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_states.dart';
@@ -24,7 +25,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E2C),
+          backgroundColor: AppTheme.surfaceElevated,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             'Edit Budget for $categoryName',
@@ -33,13 +34,13 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           content: TextField(
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(color: Colors.white),
+            style: AppTheme.tabularNumbers(color: Colors.white, fontSize: 16),
             decoration: const InputDecoration(
               labelText: 'Monthly Limit (₹)',
               labelStyle: TextStyle(color: Colors.white70),
-              prefixIcon: Icon(Icons.currency_rupee, color: Color(0xFF03DAC6)),
+              prefixIcon: Icon(Icons.currency_rupee, color: AppTheme.trustTeal),
               enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF6C63FF))),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.trustBlue)),
             ),
           ),
           actions: [
@@ -49,7 +50,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6C63FF),
+                backgroundColor: AppTheme.trustBlue,
                 foregroundColor: Colors.white,
               ),
               onPressed: () {
@@ -75,16 +76,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final budgetsList = ref.watch(categoryBudgetsListProvider);
     final budgetSummary = ref.watch(overallBudgetSummaryProvider);
 
-    final colors = [
-      const Color(0xFF6C63FF),
-      const Color(0xFF03DAC6),
-      const Color(0xFFFFB74D),
-      const Color(0xFFE91E63),
-      const Color(0xFF42A5F5),
-      const Color(0xFFAB47BC),
-      const Color(0xFF26A69A),
-      const Color(0xFFFF7043),
-    ];
+    final colors = AppTheme.chartTonalColors;
 
     return Scaffold(
       appBar: AppBar(
@@ -123,7 +115,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 value: entry.value,
                 title: '${percent.toStringAsFixed(0)}%',
                 radius: radius,
-                titleStyle: TextStyle(
+                titleStyle: AppTheme.tabularNumbers(
                   fontSize: isTouched ? 14 : 12,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -146,7 +138,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 // Top Chart Card
                 GlassCard(
                   padding: const EdgeInsets.all(20),
-                  gradientColors: const [Color(0xFF22203C), Color(0xFF161528)],
+                  gradientColors: const [Color(0xFF1E293B), Color(0xFF111827)],
                   child: Column(
                     children: [
                       const Text(
@@ -192,7 +184,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 ),
                                 Text(
                                   Formatters.formatCurrency(totalSpend),
-                                  style: const TextStyle(
+                                  style: AppTheme.tabularNumbers(
                                     fontSize: 15,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
@@ -212,17 +204,17 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 // AI Forecast & Burn Rate Card
                 GlassCard(
                   padding: const EdgeInsets.all(16),
-                  gradientColors: const [Color(0xFF1E2638), Color(0xFF121824)],
+                  gradientColors: const [Color(0xFF1E293B), Color(0xFF0F172A)],
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.auto_graph_rounded, color: Color(0xFF03DAC6), size: 18),
+                          Icon(Icons.auto_graph_rounded, color: AppTheme.trustTeal, size: 18),
                           SizedBox(width: 8),
                           Text(
                             'AI Spending Forecast (End of Month)',
-                            style: TextStyle(color: Color(0xFF03DAC6), fontWeight: FontWeight.bold, fontSize: 13),
+                            style: TextStyle(color: AppTheme.trustTeal, fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                         ],
                       ),
@@ -237,7 +229,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 Formatters.formatCurrency(dailyBurn),
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                                style: AppTheme.tabularNumbers(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
                               ),
                             ],
                           ),
@@ -248,7 +240,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 Formatters.formatCurrency(forecastSpend),
-                                style: const TextStyle(color: Color(0xFFFFB74D), fontWeight: FontWeight.bold, fontSize: 15),
+                                style: AppTheme.tabularNumbers(color: AppTheme.warningAmber, fontWeight: FontWeight.bold, fontSize: 15),
                               ),
                             ],
                           ),
@@ -275,21 +267,21 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: (budgetSummary.health == BudgetHealth.healthy
-                                ? const Color(0xFF03DAC6)
+                                ? AppTheme.inflowGreen
                                 : budgetSummary.health == BudgetHealth.warning
-                                    ? const Color(0xFFFFB74D)
-                                    : const Color(0xFFFF5252))
+                                    ? AppTheme.warningAmber
+                                    : AppTheme.outflowCoral)
                             .withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         '${(budgetSummary.percentage * 100).toStringAsFixed(0)}% Budget Used',
-                        style: TextStyle(
+                        style: AppTheme.tabularNumbers(
                           color: budgetSummary.health == BudgetHealth.healthy
-                              ? const Color(0xFF03DAC6)
+                              ? AppTheme.inflowGreen
                               : budgetSummary.health == BudgetHealth.warning
-                                  ? const Color(0xFFFFB74D)
-                                  : const Color(0xFFFF5252),
+                                  ? AppTheme.warningAmber
+                                  : AppTheme.outflowCoral,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
@@ -304,15 +296,15 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: budgetsList.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (context, index) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final item = budgetsList[index];
                     final percent = item.percentage.clamp(0.0, 1.0);
                     final healthColor = item.health == BudgetHealth.healthy
-                        ? const Color(0xFF03DAC6)
+                        ? AppTheme.inflowGreen
                         : item.health == BudgetHealth.warning
-                            ? const Color(0xFFFFB74D)
-                            : const Color(0xFFFF5252);
+                            ? AppTheme.warningAmber
+                            : AppTheme.outflowCoral;
 
                     return InkWell(
                       onTap: () => _showEditBudgetDialog(item.categoryName, item.budgetLimit),
@@ -341,7 +333,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 ),
                                 Text(
                                   '${Formatters.formatCurrency(item.spent)} / ${Formatters.formatCurrency(item.budgetLimit)}',
-                                  style: TextStyle(
+                                  style: AppTheme.tabularNumbers(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
                                     color: healthColor,
@@ -365,7 +357,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               children: [
                                 Text(
                                   item.health == BudgetHealth.exceeded
-                                      ? '⚠️ Over Budget!'
+                                      ? '⚠️ Over Budget'
                                       : item.health == BudgetHealth.warning
                                           ? 'Approaching limit'
                                           : 'On Track',
@@ -373,7 +365,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 ),
                                 Text(
                                   '${(item.percentage * 100).toStringAsFixed(1)}%',
-                                  style: const TextStyle(fontSize: 10.5, color: Colors.white38),
+                                  style: AppTheme.tabularNumbers(fontSize: 10.5, color: Colors.white38),
                                 ),
                               ],
                             ),

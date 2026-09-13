@@ -62,7 +62,7 @@ class AppButton extends StatelessWidget {
 
     // Primary & Secondary (Elevated / Gradient)
     final isPrimary = variant == AppButtonVariant.primary;
-    final defaultBg = isPrimary ? const Color(0xFF6C63FF) : const Color(0xFF2A2A2A);
+    final defaultBg = isPrimary ? const Color(0xFF2563EB) : const Color(0xFF1E293B);
     final effectiveBg = backgroundColor ?? defaultBg;
 
     return SizedBox(
@@ -73,7 +73,7 @@ class AppButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           gradient: isPrimary && isEnabled && backgroundColor == null
               ? const LinearGradient(
-                  colors: [Color(0xFF6C63FF), Color(0xFF8B80F9)],
+                  colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
@@ -81,7 +81,7 @@ class AppButton extends StatelessWidget {
           boxShadow: isPrimary && isEnabled
               ? [
                   BoxShadow(
-                    color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.3),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),

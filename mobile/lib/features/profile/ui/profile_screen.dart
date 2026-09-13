@@ -14,14 +14,13 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authUser = ref.watch(authProvider).value;
-    final userName = authUser?.name ?? authUser?.email.split('@').first ?? 'User';
+    final userName =
+        authUser?.name ?? authUser?.email.split('@').first ?? 'User';
     final userEmail = authUser?.email ?? 'user@example.com';
     final expenses = ref.watch(expensesProvider).value ?? [];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile & Settings'),
-      ),
+      appBar: AppBar(title: const Text('My Profile & Settings')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(
@@ -77,14 +76,23 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF03DAC6).withValues(alpha: 0.15),
+                            color: const Color(
+                              0xFF03DAC6,
+                            ).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             '${expenses.length} Records Logged',
-                            style: const TextStyle(color: Color(0xFF03DAC6), fontSize: 11, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              color: Color(0xFF03DAC6),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -205,7 +213,11 @@ class ProfileScreen extends ConsumerWidget {
         ),
         title: Text(
           title,
-          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,

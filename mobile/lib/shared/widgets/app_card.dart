@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 
 class AppCard extends StatelessWidget {
   final Widget child;
@@ -32,9 +33,9 @@ class AppCard extends StatelessWidget {
       margin: margin,
       padding: padding,
       decoration: BoxDecoration(
-        color: color ?? const Color(0xFF1E1E1E),
+        color: color ?? AppTheme.surfaceSlate,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: border ?? Border.all(color: const Color(0xFF2C2C2C), width: 1),
+        border: border ?? Border.all(color: AppTheme.borderSlate, width: 1),
       ),
       child: child,
     );
@@ -47,6 +48,8 @@ class AppCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(borderRadius),
+            splashColor: AppTheme.trustBlue.withValues(alpha: 0.1),
+            highlightColor: AppTheme.trustBlue.withValues(alpha: 0.05),
             child: cardContent,
           ),
         ),
@@ -83,8 +86,8 @@ class GlassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = gradientColors ??
         [
-          const Color(0xFF2A2A38).withValues(alpha: 0.9),
-          const Color(0xFF1E1E28).withValues(alpha: 0.7),
+          const Color(0xFF1E293B).withValues(alpha: 0.95),
+          const Color(0xFF131B2A).withValues(alpha: 0.85),
         ];
 
     final container = Container(
@@ -100,13 +103,13 @@ class GlassCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: Colors.white.withValues(alpha: 0.09),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 16,
+            color: Colors.black.withValues(alpha: 0.28),
+            blurRadius: 18,
             offset: const Offset(0, 8),
           ),
         ],
@@ -122,6 +125,7 @@ class GlassCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(borderRadius),
+            splashColor: AppTheme.trustBlue.withValues(alpha: 0.12),
             child: container,
           ),
         ),

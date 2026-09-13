@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import '../utils/formatters.dart';
 import 'app_card.dart';
 
@@ -40,9 +41,9 @@ class TransactionTile extends StatelessWidget {
       builder: (ctx) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         decoration: const BoxDecoration(
-          color: Color(0xFF14141E),
+          color: AppTheme.bgSlate,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(top: BorderSide(color: Color(0xFF2C2C3E), width: 1.5)),
+          border: Border(top: BorderSide(color: AppTheme.borderSlate, width: 1.5)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -93,10 +94,10 @@ class TransactionTile extends StatelessWidget {
                 ),
                 Text(
                   Formatters.formatCurrency(amount, currency: currency),
-                  style: const TextStyle(
+                  style: AppTheme.tabularNumbers(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: isExpense ? const Color(0xFFF1F5F9) : AppTheme.inflowGreen,
                   ),
                 ),
               ],
@@ -106,7 +107,7 @@ class TransactionTile extends StatelessWidget {
             // Date, Day & Time Card
             GlassCard(
               padding: const EdgeInsets.all(16),
-              gradientColors: const [Color(0xFF201D38), Color(0xFF141324)],
+              gradientColors: const [Color(0xFF1E293B), Color(0xFF131B2A)],
               child: Column(
                 children: [
                   _buildDetailRow(
@@ -151,7 +152,7 @@ class TransactionTile extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF03DAC6)),
+        Icon(icon, size: 18, color: AppTheme.trustTeal),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -172,15 +173,15 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = categoryColor ?? (isExpense ? const Color(0xFF6C63FF) : const Color(0xFF03DAC6));
+    final effectiveColor = categoryColor ?? (isExpense ? AppTheme.trustBlue : AppTheme.inflowGreen);
     final effectiveIcon = categoryIcon ?? (isExpense ? Icons.shopping_bag_outlined : Icons.account_balance_wallet_outlined);
 
     Widget tileContent = Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: AppTheme.surfaceSlate,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF2C2C2C), width: 1),
+        border: Border.all(color: AppTheme.borderSlate, width: 1),
       ),
       child: Row(
         children: [
@@ -258,14 +259,14 @@ class TransactionTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          // Amount
+          // Amount with Tabular Figures
           Text(
             '${isExpense ? '-' : '+'} ${Formatters.formatCurrency(amount, currency: currency)}',
-            style: TextStyle(
+            style: AppTheme.tabularNumbers(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: isExpense ? Colors.white : const Color(0xFF03DAC6),
-              letterSpacing: -0.3,
+              color: isExpense ? const Color(0xFFF1F5F9) : AppTheme.inflowGreen,
+              letterSpacing: -0.2,
             ),
           ),
         ],
@@ -295,7 +296,7 @@ class TransactionTile extends StatelessWidget {
           alignment: Alignment.centerRight,
           padding: const EdgeInsets.only(right: 20),
           decoration: BoxDecoration(
-            color: const Color(0xFFCF6679).withValues(alpha: 0.85),
+            color: AppTheme.outflowCoral.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(16),
           ),
           child: const Row(
