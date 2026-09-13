@@ -24,13 +24,13 @@ class ExpenseRepository {
         if (startDate != null) 'startDate': startDate.toIso8601String(),
         if (endDate != null) 'endDate': endDate.toIso8601String(),
         if (categoryId != null && categoryId.isNotEmpty) 'categoryId': categoryId,
-        if (minAmount != null) 'minAmount': minAmount,
-        if (maxAmount != null) 'maxAmount': maxAmount,
+        'minAmount': ?minAmount,
+        'maxAmount': ?maxAmount,
         if (search != null && search.isNotEmpty) 'search': search,
-        if (sortBy != null) 'sortBy': sortBy,
-        if (order != null) 'order': order,
-        if (page != null) 'page': page,
-        if (limit != null) 'limit': limit,
+        'sortBy': ?sortBy,
+        'order': ?order,
+        'page': ?page,
+        'limit': ?limit,
       };
 
       final response = await _apiClient.dio.get(
@@ -121,8 +121,8 @@ class ExpenseRepository {
         '/categories',
         data: {
           'name': name,
-          if (icon != null) 'icon': icon,
-          if (color != null) 'color': color,
+          'icon': ?icon,
+          'color': ?color,
         },
       );
 

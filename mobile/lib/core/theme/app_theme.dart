@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -44,7 +45,7 @@ class AppTheme {
       fontWeight: fontWeight,
       color: color,
       letterSpacing: letterSpacing,
-      fontFeatures: const [FontFeature.tabularFigures()],
+      fontFeatures: kIsWeb ? const [] : const [FontFeature.tabularFigures()],
     );
   }
 
