@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../expenses/providers/expense_provider.dart';
+import 'export_statement_sheet.dart';
+import 'privacy_security_sheet.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -13,18 +16,20 @@ class ProfileScreen extends ConsumerWidget {
     final authUser = ref.watch(authProvider).value;
     final userName = authUser?.name ?? authUser?.email.split('@').first ?? 'User';
     final userEmail = authUser?.email ?? 'user@example.com';
+    final expenses = ref.watch(expensesProvider).value ?? [];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Profile'),
+        title: const Text('My Profile & Settings'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(
           children: [
             // User Avatar Card
-            AppCard(
+            GlassCard(
               padding: const EdgeInsets.all(20),
+              gradientColors: const [Color(0xFF26224A), Color(0xFF161528)],
               child: Row(
                 children: [
                   Container(
@@ -70,6 +75,18 @@ class ProfileScreen extends ConsumerWidget {
                             color: Colors.white54,
                           ),
                         ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF03DAC6).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '${expenses.length} Records Logged',
+                            style: const TextStyle(color: Color(0xFF03DAC6), fontSize: 11, fontWeight: FontWeight.w600),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -77,6 +94,32 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
+
+            // Data & Reports Section
+            _buildSectionHeader('Data & Exports'),
+            const SizedBox(height: 10),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  _buildListTile(
+                    icon: Icons.file_download_outlined,
+                    title: 'Export Spending Statement (CSV)',
+                    trailing: 'Download',
+                    onTap: () => ExportStatementSheet.show(context),
+                  ),
+                  const Divider(height: 1, color: Color(0xFF2C2C2C)),
+                  _buildListTile(
+                    icon: Icons.shield_outlined,
+                    title: 'Privacy & Zero-Trust Security',
+                    trailing: 'Manage',
+                    onTap: () => PrivacySecuritySheet.show(context),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
             // Preferences Group
             _buildSectionHeader('Preferences'),
             const SizedBox(height: 10),
@@ -93,38 +136,7 @@ class ProfileScreen extends ConsumerWidget {
                   const Divider(height: 1, color: Color(0xFF2C2C2C)),
                   _buildListTile(
                     icon: Icons.notifications_none_rounded,
-                    title: 'Bill Reminders',
-                    trailing: 'Enabled',
-                    onTap: () {},
-                  ),
-                  const Divider(height: 1, color: Color(0xFF2C2C2C)),
-                  _buildListTile(
-                    icon: Icons.security_rounded,
-                    title: 'Security & PIN',
-                    trailing: 'Active',
-                    onTap: () {},
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            // AI Assistant Settings
-            _buildSectionHeader('AI Advisor'),
-            const SizedBox(height: 10),
-            AppCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  _buildListTile(
-                    icon: Icons.auto_awesome_rounded,
-                    title: 'Smart Spending Insights',
-                    trailing: 'On',
-                    onTap: () {},
-                  ),
-                  const Divider(height: 1, color: Color(0xFF2C2C2C)),
-                  _buildListTile(
-                    icon: Icons.receipt_long_outlined,
-                    title: 'Receipt Auto-Categorization',
+                    title: 'Smart Ingest Notifications',
                     trailing: 'Active',
                     onTap: () {},
                   ),
@@ -132,6 +144,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 32),
+
             // Logout Button
             AppButton(
               text: 'Log Out',
@@ -148,7 +161,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
             const Text(
-              'AI Finance Assistant v1.0.0',
+              'AI Finance Assistant • v1.2.0 (Fintech Edition)',
               style: TextStyle(color: Colors.white24, fontSize: 12),
             ),
             const SizedBox(height: 20),

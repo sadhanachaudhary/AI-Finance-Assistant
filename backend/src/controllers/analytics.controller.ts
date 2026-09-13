@@ -51,3 +51,91 @@ export const getAnalyticsSummary = async (req: Request, res: Response, next: Nex
     next(error);
   }
 };
+
+export const getRecurringExpenses = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.userId!;
+
+    const expenses = await prisma.expense.findMany({
+      where: { userId },
+      include: { category: true },
+      orderBy: { date: 'desc' },
+    });
+
+    // Known subscription keywords
+    const subscriptionKeywords = ['netflix', 'spotify', 'gym', 'membership', 'icloud', 'prime', 'electricity', 'broadband', 'water', 'sub'];
+
+    const recurring: Array<{
+      merchant: string;
+      amount: number;
+      categoryName: string;
+      frequency: string;
+      estimatedAnnualCost: number;
+    }> = [];
+
+    const seenMerchants = new Set<string>();
+
+    for (const exp of expenses) {
+      const merchant = exp.merchant || 'Subscription';
+      const lower = merchant.toLowerCase();
+
+      const isSub = subscriptionKeywords.some((kw) => lower.includes(kw));
+
+      if (isSub && !seenMerchants.has(lower)) {
+        seenMerchants.add(lower);
+        recurring.push({
+          merchant,
+          amount: exp.amount,
+          categoryName: exp.category?.name || 'Bills & Utilities',
+          frequency: 'Monthly',
+          estimatedAnnualCost: exp.amount * 12,
+        });
+      }
+    }
+
+    const totalMonthlySubscriptionCost = recurring.reduce((sum, item) => sum + item.amount, 0);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        totalMonthlyCost: totalMonthlySubscriptionCost,
+        count: recurring.length,
+        subscriptions: recurring,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSpendingForecast = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.userId!;
+
+    const expenses = await prisma.expense.findMany({
+      where: { userId },
+      orderBy: { date: 'desc' },
+    });
+
+    const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const now = new Date();
+    const currentDay = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+    const dailyBurnRate = currentDay > 0 ? totalSpent / currentDay : 0;
+    const projectedMonthlySpend = dailyBurnRate * daysInMonth;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        currentSpend: totalSpent,
+        daysPassed: currentDay,
+        daysRemaining: daysInMonth - currentDay,
+        dailyBurnRate: Math.round(dailyBurnRate * 100) / 100,
+        projectedMonthlySpend: Math.round(projectedMonthlySpend * 100) / 100,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

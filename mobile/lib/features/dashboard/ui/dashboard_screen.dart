@@ -8,6 +8,7 @@ import '../../../shared/widgets/stat_card.dart';
 import '../../../shared/widgets/transaction_tile.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../expenses/providers/expense_provider.dart';
+import '../../bills/ui/scan_bill_sheet.dart';
 import '../../expenses/ui/add_expense_sheet.dart';
 import '../../expenses/ui/smart_ingest_sheet.dart';
 import '../../profile/ui/privacy_security_sheet.dart';
@@ -214,34 +215,46 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _QuickActionButton(
-                        icon: Icons.auto_awesome,
-                        label: 'Auto-Track',
-                        color: const Color(0xFF03DAC6),
-                        onTap: () => SmartIngestSheet.show(context),
-                      ),
-                      _QuickActionButton(
-                        icon: Icons.add_rounded,
-                        label: 'Add Expense',
-                        color: const Color(0xFF6C63FF),
-                        onTap: () => AddExpenseSheet.show(context),
-                      ),
-                      _QuickActionButton(
-                        icon: Icons.chat_bubble_outline_rounded,
-                        label: 'Ask AI',
-                        color: const Color(0xFFFFB74D),
-                        onTap: () => context.go('/ai'),
-                      ),
-                      _QuickActionButton(
-                        icon: Icons.insights_rounded,
-                        label: 'Analytics',
-                        color: const Color(0xFFE91E63),
-                        onTap: () => context.go('/analytics'),
-                      ),
-                    ],
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _QuickActionButton(
+                          icon: Icons.auto_awesome,
+                          label: 'Auto-Track',
+                          color: const Color(0xFF03DAC6),
+                          onTap: () => SmartIngestSheet.show(context),
+                        ),
+                        const SizedBox(width: 10),
+                        _QuickActionButton(
+                          icon: Icons.document_scanner_rounded,
+                          label: 'Scan Bill',
+                          color: const Color(0xFF6C63FF),
+                          onTap: () => ScanBillSheet.show(context),
+                        ),
+                        const SizedBox(width: 10),
+                        _QuickActionButton(
+                          icon: Icons.add_rounded,
+                          label: 'Add Expense',
+                          color: const Color(0xFF42A5F5),
+                          onTap: () => AddExpenseSheet.show(context),
+                        ),
+                        const SizedBox(width: 10),
+                        _QuickActionButton(
+                          icon: Icons.chat_bubble_outline_rounded,
+                          label: 'Ask AI',
+                          color: const Color(0xFFFFB74D),
+                          onTap: () => context.go('/ai'),
+                        ),
+                        const SizedBox(width: 10),
+                        _QuickActionButton(
+                          icon: Icons.insights_rounded,
+                          label: 'Budgets',
+                          color: const Color(0xFFE91E63),
+                          onTap: () => context.go('/analytics'),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 28),
                   // Recent Transactions Header
