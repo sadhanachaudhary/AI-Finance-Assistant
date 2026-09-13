@@ -95,23 +95,29 @@ class SecurityNotifier extends Notifier<SecurityState> {
   }
 
   Future<void> _loadFromStorage() async {
-    final otp = await _storage.read('sec_otp');
-    final dev = await _storage.read('sec_dev');
-    final pii = await _storage.read('sec_pii');
-    final mask = await _storage.read('sec_mask');
-    final bio = await _storage.read('sec_bio');
-    final auto = await _storage.read('sec_auto');
-    final exp = await _storage.read('sec_exp');
+    try {
+      final otp = await _storage.read('sec_otp');
+      final dev = await _storage.read('sec_dev');
+      final pii = await _storage.read('sec_pii');
+      final mask = await _storage.read('sec_mask');
+      final bio = await _storage.read('sec_bio');
+      final auto = await _storage.read('sec_auto');
+      final exp = await _storage.read('sec_exp');
 
-    state = SecurityState(
-      otpShield: otp == null || otp == 'true',
-      onDeviceOnly: dev == null || dev == 'true',
-      piiShield: pii == null || pii == 'true',
-      maskAccounts: mask == null || mask == 'true',
-      biometricLock: bio == null || bio == 'true',
-      autoLock: auto == null || auto == 'true',
-      exportEncryption: exp == null || exp == 'true',
-    );
+      if (!ref.mounted) return;
+
+      state = SecurityState(
+        otpShield: otp == null || otp == 'true',
+        onDeviceOnly: dev == null || dev == 'true',
+        piiShield: pii == null || pii == 'true',
+        maskAccounts: mask == null || mask == 'true',
+        biometricLock: bio == null || bio == 'true',
+        autoLock: auto == null || auto == 'true',
+        exportEncryption: exp == null || exp == 'true',
+      );
+    } catch (_) {
+      // Safe fallback for uninitialized storage or disposed refs
+    }
   }
 
   Future<void> toggleOtpShield(bool val) async {
