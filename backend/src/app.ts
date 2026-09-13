@@ -9,9 +9,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check route
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok', message: 'API is running' });
+// Health check route with active database ping
+import { checkDbHealth } from './config/prisma';
+
+app.get('/health', async (req: Request, res: Response) => {
+  const isDbHealthy = await checkDbHealth();
+  if (isDbHealthy) {
+    res.status(200).json({ status: 'ok', database: 'connected', timestamp: new Date().toISOString() });
+  } else {
+    res.status(503).json({ status: 'degraded', database: 'disconnected', timestamp: new Date().toISOString() });
+  }
 });
 
 // API Routes will be mounted here
