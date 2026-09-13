@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import prisma from '../config/prisma';
+import { cacheService } from '../utils/cache.service';
 
 export const createExpenseSchema = z.object({
   body: z.object({
@@ -43,6 +44,11 @@ export const createExpense = async (req: Request, res: Response, next: NextFunct
         category: true,
       },
     });
+
+    // Invalidate analytics caches for this user
+    cacheService.invalidatePattern(`analytics:${userId}`);
+    cacheService.invalidatePattern(`analytics:summary:${userId}`);
+    cacheService.invalidatePattern(`analytics:forecast:${userId}`);
 
     res.status(201).json({
       status: 'success',
@@ -175,6 +181,9 @@ export const updateExpense = async (req: Request, res: Response, next: NextFunct
       include: { category: true },
     });
 
+    // Invalidate analytics caches
+    cacheService.invalidatePattern(`analytics:${userId}`);
+
     res.status(200).json({
       status: 'success',
       data: { expense },
@@ -196,6 +205,9 @@ export const deleteExpense = async (req: Request, res: Response, next: NextFunct
     }
 
     await prisma.expense.delete({ where: { id } });
+
+    // Invalidate analytics caches
+    cacheService.invalidatePattern(`analytics:${userId}`);
 
     res.status(204).json({
       status: 'success',
