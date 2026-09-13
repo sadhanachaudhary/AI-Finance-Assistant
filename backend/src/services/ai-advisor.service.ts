@@ -138,16 +138,19 @@ Guidelines:
         parts: [{ text: userMessage }],
       });
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`;
       
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-goog-api-key': apiKey.trim(),
+        },
         body: JSON.stringify({
           contents,
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 800,
+            maxOutputTokens: 1000,
           },
         }),
       });
@@ -158,6 +161,9 @@ Guidelines:
         if (text && typeof text === 'string' && text.trim().length > 0) {
           return text.trim();
         }
+      } else {
+        const errBody = await response.text();
+        console.warn('Gemini API response error:', response.status, errBody);
       }
     } catch (err) {
       console.warn('Gemini API call failed, using heuristic advisor fallback:', err);
