@@ -232,6 +232,22 @@ class _ScanBillSheetState extends ConsumerState<ScanBillSheet> {
             // Header Title
             Row(
               children: [
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                    ),
+                    child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  tooltip: 'Back',
+                ),
+                const SizedBox(width: 12),
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -241,22 +257,38 @@ class _ScanBillSheetState extends ConsumerState<ScanBillSheet> {
                   child: const Icon(Icons.document_scanner_rounded, color: Color(0xFF03DAC6), size: 22),
                 ),
                 const SizedBox(width: 12),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'AI Receipt & Bill Scanner',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'AI Receipt Scanner',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
+                      Text(
+                        'Extract line items & taxes',
+                        style: TextStyle(fontSize: 12, color: Colors.white54),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
                     ),
-                    Text(
-                      'Auto-extract line items, taxes & total',
-                      style: TextStyle(fontSize: 12, color: Colors.white54),
-                    ),
-                  ],
+                    child: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  tooltip: 'Close',
                 ),
               ],
             ),

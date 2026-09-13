@@ -99,6 +99,22 @@ class _ExportStatementSheetState extends ConsumerState<ExportStatementSheet> {
             const SizedBox(height: 18),
             Row(
               children: [
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                    ),
+                    child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  tooltip: 'Back to Profile',
+                ),
+                const SizedBox(width: 12),
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -108,22 +124,38 @@ class _ExportStatementSheetState extends ConsumerState<ExportStatementSheet> {
                   child: const Icon(Icons.file_download_outlined, color: Color(0xFF6C63FF), size: 24),
                 ),
                 const SizedBox(width: 12),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Export Spending Statement',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Export Spending Statement',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
+                      Text(
+                        'Download CSV/Excel format',
+                        style: TextStyle(fontSize: 12, color: Colors.white54),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
                     ),
-                    Text(
-                      'Download transaction history in CSV/Excel format',
-                      style: TextStyle(fontSize: 12, color: Colors.white54),
-                    ),
-                  ],
+                    child: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  tooltip: 'Close',
                 ),
               ],
             ),
