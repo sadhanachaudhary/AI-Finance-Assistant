@@ -13,6 +13,7 @@ import '../../bills/ui/scan_bill_sheet.dart';
 import '../../expenses/ui/add_expense_sheet.dart';
 import '../../expenses/ui/smart_ingest_sheet.dart';
 import '../../profile/ui/privacy_security_sheet.dart';
+import '../../../shared/providers/security_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -91,6 +92,7 @@ class DashboardScreen extends ConsumerWidget {
         ),
         data: (expenses) {
           final recentExpenses = expenses.take(4).toList();
+          final sec = ref.watch(securityProvider);
 
           return RefreshIndicator(
             onRefresh: () async {
@@ -104,6 +106,43 @@ class DashboardScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (sec.isRestricted) ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.outflowCoral.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppTheme.outflowCoral.withValues(alpha: 0.4)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.gpp_maybe_rounded, color: AppTheme.outflowCoral, size: 22),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Security Posture Restricted', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                                Text('Essential security layers disabled.', style: TextStyle(color: AppTheme.outflowCoral, fontSize: 11.5)),
+                              ],
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.outflowCoral,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              minimumSize: Size.zero,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            onPressed: () => PrivacySecuritySheet.show(context),
+                            child: const Text('Resolve', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   // Hero Balance Card
                   GlassCard(
                     padding: const EdgeInsets.all(22),

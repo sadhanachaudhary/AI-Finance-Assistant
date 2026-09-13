@@ -4,6 +4,7 @@ import '../../../shared/utils/formatters.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../expenses/providers/expense_provider.dart';
 import '../../goals/providers/goal_provider.dart';
+import '../../../shared/providers/security_provider.dart';
 
 class ChatMessage {
   final String text;
@@ -88,27 +89,34 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     _scrollToBottom();
 
     String aiResponse = '';
+    final sec = ref.read(securityProvider);
 
-    try {
-      final apiClient = ref.read(apiClientProvider);
-      final historyPayload = _messages.map((m) => {
-        'role': m.isUser ? 'user' : 'assistant',
-        'content': m.text,
-      }).toList();
+    if (sec.isRestricted) {
+      aiResponse = "⚠️ **Security Restrictions Active (Restricted Mode)**\n\n"
+          "Live Cloud AI features are locked down because **Layer 1 Core Integrity** or **Layer 2 PII Redaction** is disabled in your settings.\n\n"
+          "🛡️ Go to **Profile → Privacy & Security Shield** and enable all layers to restore full AI capabilities.";
+    } else {
+      try {
+        final apiClient = ref.read(apiClientProvider);
+        final historyPayload = _messages.map((m) => {
+          'role': m.isUser ? 'user' : 'assistant',
+          'content': m.text,
+        }).toList();
 
-      final res = await apiClient.dio.post(
-        '/ai/chat',
-        data: {
-          'message': userMsg,
-          'history': historyPayload,
-        },
-      );
+        final res = await apiClient.dio.post(
+          '/ai/chat',
+          data: {
+            'message': userMsg,
+            'history': historyPayload,
+          },
+        );
 
-      if (res.statusCode == 200 && res.data != null && res.data['data'] != null) {
-        aiResponse = res.data['data']['reply'] as String;
+        if (res.statusCode == 200 && res.data != null && res.data['data'] != null) {
+          aiResponse = res.data['data']['reply'] as String;
+        }
+      } catch (e) {
+        debugPrint('AI API chat error: $e. Using local financial intelligence engine.');
       }
-    } catch (e) {
-      debugPrint('AI API chat error: $e. Using local financial intelligence engine.');
     }
 
     // If backend response wasn't obtained, use deep local financial advisor
