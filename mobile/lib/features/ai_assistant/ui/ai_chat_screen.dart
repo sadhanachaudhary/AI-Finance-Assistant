@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/utils/formatters.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../analytics/providers/budget_provider.dart';
 import '../../expenses/providers/expense_provider.dart';
 
@@ -8,13 +9,11 @@ class ChatMessage {
   final String text;
   final bool isUser;
   final DateTime timestamp;
-  final Widget? customWidget;
 
   ChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
-    this.customWidget,
   });
 }
 
@@ -32,9 +31,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   bool _isTyping = false;
 
   final List<String> _suggestedPrompts = [
+    '📊 Summary of all my data',
+    '🎯 How to set budget limits?',
     '🔁 Detect recurring subscriptions',
     '🔮 15-day spending forecast',
-    '📊 Where am I overspending?',
     '💡 How to save ₹5,000 this month',
   ];
 
@@ -43,7 +43,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     super.initState();
     _messages.add(
       ChatMessage(
-        text: "Hello! I'm your AI Financial Advisor. Ask me anything about your spending, recurring subscriptions, or forecast your budget!",
+        text: "Hello! I'm your AI Financial Advisor. Ask me anything about your spending, how to set budgets, recurring subscriptions, or forecast your month!",
         isUser: false,
         timestamp: DateTime.now(),
       ),
@@ -69,7 +69,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     });
   }
 
-  void _sendMessage(String text) async {
+  Future<void> _sendMessage(String text) async {
     if (text.trim().isEmpty) return;
 
     final userMsg = text.trim();
@@ -87,53 +87,42 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     });
     _scrollToBottom();
 
-    final totalSpend = ref.read(totalSpendProvider);
-    final categoryMap = ref.read(categorySpendMapProvider);
-    final expenses = ref.read(expensesProvider).value ?? [];
-    final budgetSummary = ref.read(overallBudgetSummaryProvider);
-
-    await Future.delayed(const Duration(milliseconds: 900));
-
     String aiResponse = '';
-    final lower = userMsg.toLowerCase();
 
-    if (lower.contains('recurring') || lower.contains('subscription') || lower.contains('detect')) {
-      final subKeywords = ['netflix', 'spotify', 'gym', 'membership', 'icloud', 'prime', 'electricity', 'water', 'sub'];
-      final detected = expenses.where((e) {
-        final m = (e.merchant ?? '').toLowerCase();
-        return subKeywords.any((kw) => m.contains(kw));
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final historyPayload = _messages.map((m) => {
+        'role': m.isUser ? 'user' : 'assistant',
+        'content': m.text,
       }).toList();
 
-      if (detected.isEmpty) {
-        aiResponse = "I scanned your expenses and did not find any recurring subscriptions like Netflix, Spotify, or Gym memberships yet.";
-      } else {
-        final subTotal = detected.fold<double>(0.0, (s, e) => s + e.amount);
-        final annualCost = subTotal * 12;
-        final listStr = detected.map((e) => "• **${e.merchant}**: ${Formatters.formatCurrency(e.amount)}/mo").join("\n");
+      final res = await apiClient.dio.post(
+        '/ai/chat',
+        data: {
+          'message': userMsg,
+          'history': historyPayload,
+        },
+      );
 
-        aiResponse = "💳 **Detected Recurring Subscriptions & Fixed Bills**:\n\n$listStr\n\n💰 **Total Monthly Cost**: ${Formatters.formatCurrency(subTotal)}\n📅 **Projected Annual Cost**: ${Formatters.formatCurrency(annualCost)}\n\n💡 *Tip: Check if you have duplicate streaming services or memberships you rarely use to save ${Formatters.formatCurrency(subTotal * 0.3)}/month.*";
+      if (res.statusCode == 200 && res.data != null && res.data['data'] != null) {
+        aiResponse = res.data['data']['reply'] as String;
       }
-    } else if (lower.contains('forecast') || lower.contains('15-day') || lower.contains('burn')) {
-      final now = DateTime.now();
-      final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-      final daysPassed = now.day > 0 ? now.day : 1;
-      final dailyBurn = totalSpend / daysPassed;
-      final forecast = dailyBurn * daysInMonth;
+    } catch (_) {
+      // Graceful offline context-aware fallback
+      final totalSpend = ref.read(totalSpendProvider);
+      final categoryMap = ref.read(categorySpendMapProvider);
+      final budgetSummary = ref.read(overallBudgetSummaryProvider);
+      final lower = userMsg.toLowerCase();
 
-      aiResponse = "🔮 **AI 15-Day Spending Forecast**:\n\n• **Current Spent**: ${Formatters.formatCurrency(totalSpend)} (Day $daysPassed of $daysInMonth)\n• **Daily Burn Rate**: ${Formatters.formatCurrency(dailyBurn)}/day\n• **Projected Month-End Spend**: **${Formatters.formatCurrency(forecast)}**\n• **Overall Budget Limit**: ${Formatters.formatCurrency(budgetSummary.totalBudget)}\n\n${forecast > budgetSummary.totalBudget ? '⚠️ You are currently trending **above** your total budget limit. Reducing daily spend to ${Formatters.formatCurrency(budgetSummary.totalBudget / daysInMonth)}/day will keep you on track.' : '✅ Great job! Your spending velocity is within healthy targets.'}";
-    } else if (lower.contains('overspending') || lower.contains('where') || lower.contains('category') || lower.contains('biggest')) {
-      if (categoryMap.isEmpty) {
-        aiResponse = "You haven't logged categorized expenses yet.";
+      if (lower.contains('how to set') || lower.contains('how do i set')) {
+        aiResponse = "🎯 **How to Set Your Monthly Budget Limit**:\n\n1. Tap on the **Budgets** (Analytics) icon in bottom navigation.\n2. Scroll down to **Monthly Budget Limits**.\n3. **Tap on any category** (e.g. *Food & Dining*).\n4. Enter your preferred limit (e.g. ₹5,000) and tap **Save Limit**.";
+      } else if (lower.contains('dashboard') || lower.contains('all my data') || lower.contains('overview')) {
+        aiResponse = "📊 **Financial Overview**:\n• Total Spend: ${Formatters.formatCurrency(totalSpend)}\n• Active Categories: ${categoryMap.length}\n• Status: ${budgetSummary.percentage < 0.7 ? 'Healthy' : 'Needs Attention'}\n\nCheck the **Home** or **Budgets** tab for interactive charts!";
+      } else if (lower.contains('save') || lower.contains('tip')) {
+        aiResponse = "💡 **Top Money Saving Tips**:\n1. Cut food delivery by 50% (saves ~₹2,000/mo)\n2. Pause 1 unused streaming subscription (~₹649/mo)\n3. Set category limits in the Budgets tab!";
       } else {
-        final sorted = categoryMap.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-        final top = sorted.first;
-        final secondStr = sorted.length > 1 ? "Second highest is **${sorted[1].key}** at ${Formatters.formatCurrency(sorted[1].value)}.\n\n" : "";
-        aiResponse = "📊 **Spending Hotspot Analysis**:\n\nYour highest expense is **${top.key}** at **${Formatters.formatCurrency(top.value)}** (${((top.value / totalSpend) * 100).toStringAsFixed(1)}% of total).\n\n$secondStr💡 Try setting a stricter category limit on **${top.key}** in your Analytics tab!";
+        aiResponse = "Based on your current recorded spend of ${Formatters.formatCurrency(totalSpend)}, you can ask me to forecast month-end spend, detect subscriptions, or guide you on setting budget limits!";
       }
-    } else if (lower.contains('save') || lower.contains('5000') || lower.contains('tips')) {
-      aiResponse = "💡 **How to Save ₹5,000+ This Month**:\n\n1. **Cut Food Delivery by 50%**: Cooking just 2 more meals a week saves ~₹2,200/mo.\n2. **Review Auto-Debits**: Pause 1 unused entertainment service (~₹649/mo).\n3. **Switch to Weekly Fuel/Cab Caps**: Pre-load a fixed transit budget (~₹1,500/mo savings).\n4. **Smart Grocery Batching**: Use bulk shopping instead of 10-minute micro-orders (~₹800/mo savings).";
-    } else {
-      aiResponse = "Based on your total spending of ${Formatters.formatCurrency(totalSpend)}, your finances look well-structured! You can ask me to **detect recurring bills**, **forecast end-of-month spend**, or **suggest money saving tips**.";
     }
 
     if (mounted) {
@@ -197,7 +186,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF03DAC6)),
                         ),
                         SizedBox(width: 8),
-                        Text('AI Advisor is analyzing...', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                        Text('AI Advisor is thinking...', style: TextStyle(color: Colors.white54, fontSize: 12)),
                       ],
                     ),
                   ),
