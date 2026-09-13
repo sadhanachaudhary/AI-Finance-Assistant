@@ -382,12 +382,12 @@ Guidelines:
       `I detected **${detected.length} recurring subscriptions** totaling **₹${totalMonthly.toLocaleString()}/month** (₹${totalAnnual.toLocaleString()}/year):\n\n` +
       `### 📊 3-Tier Prioritization Matrix:\n` +
       `1. 🟢 **Tier 1 (Non-Negotiable Needs & Health)**:\n` +
-      `   • **Electricity & Utilities** (₹2,150/mo) $\\rightarrow$ *Essential lifeline*\n` +
-      `   • **Gold Gym Membership** (₹1,500/mo) $\\rightarrow$ *High physical & mental health ROI*\n\n` +
+      `   • **Electricity & Utilities** (₹2,150/mo) → *Essential lifeline*\n` +
+      `   • **Gold Gym Membership** (₹1,500/mo) → *High physical & mental health ROI*\n\n` +
       `2. 🟡 **Tier 2 (Productivity & Infrastructure)**:\n` +
-      `   • **Apple iCloud (2TB)** (₹219/mo) $\\rightarrow$ *Critical data integrity & security*\n\n` +
+      `   • **Apple iCloud (2TB)** (₹219/mo) → *Critical data integrity & security*\n\n` +
       `3. 🔴 **Tier 3 (Discretionary Entertainment — Priority to Trim)**:\n` +
-      `   • **Netflix Premium** (₹649/mo) $\\rightarrow$ *Save ₹7,788/yr by switching to Standard or rotating every 2 months*\n\n` +
+      `   • **Netflix Premium** (₹649/mo) → *Save ₹7,788/yr by switching to Standard or rotating every 2 months*\n\n` +
       `---\n` +
       `### 🏛️ Recommended 50/30/20 Optimization Model\n` +
       `Based on your monthly volume (₹${ctx.totalSpent.toLocaleString()}):\n` +
