@@ -147,13 +147,7 @@ class GoalsNotifier extends AsyncNotifier<List<GoalModel>> {
 // Derived overall savings stats
 final totalSavingsTargetProvider = Provider<double>((ref) {
   final goals = ref.watch(goalsProvider).value ?? [];
-  return goals.reduce((sum, g) => GoalModel(
-    id: '',
-    name: '',
-    targetAmount: sum.targetAmount + g.targetAmount,
-    currentAmount: 0,
-    createdAt: DateTime.now(),
-  )).targetAmount;
+  return goals.fold(0.0, (sum, g) => sum + g.targetAmount);
 });
 
 final totalSavedAmountProvider = Provider<double>((ref) {
