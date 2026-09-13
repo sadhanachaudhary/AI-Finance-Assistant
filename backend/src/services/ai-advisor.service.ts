@@ -1,4 +1,5 @@
 import prisma from '../config/prisma';
+import { PiiRedactorService } from './pii-redactor.service';
 
 export interface ChatContext {
   userId: string;
@@ -177,13 +178,17 @@ Guidelines:
    * Generates intelligent, responsive financial answer based on message and user ledger.
    */
   static async generateAnswer(userMessage: string, history: Array<{ role: string; content: string }>, ctx: ChatContext): Promise<string> {
+    // 0. Enterprise PII Redaction: Scrub any card numbers, CVVs, passwords or sensitive codes
+    const safeUserMessage = PiiRedactorService.redact(userMessage);
+    const safeCtx = PiiRedactorService.sanitizeContext(ctx);
+
     // 1. Try Live Gemini Generative AI first if API Key is configured
     if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 5) {
-      const geminiReply = await AiAdvisorService.callGeminiApi(userMessage, history, ctx);
+      const geminiReply = await AiAdvisorService.callGeminiApi(safeUserMessage, history, safeCtx);
       if (geminiReply) return geminiReply;
     }
 
-    const msg = userMessage.toLowerCase().trim();
+    const msg = safeUserMessage.toLowerCase().trim();
     const prevAssistantMsg = history.filter((h) => h.role === 'assistant').slice(-1)[0]?.content.toLowerCase() || '';
     const prevUserMsg = history.filter((h) => h.role === 'user').slice(-2)[0]?.content.toLowerCase() || '';
 

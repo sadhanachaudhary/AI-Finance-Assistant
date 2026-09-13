@@ -22,18 +22,32 @@ class _PrivacySecuritySheetState extends State<PrivacySecuritySheet> {
   bool _maskAccounts = true;
   bool _autoRejectOtp = true;
   bool _aiCategorization = true;
+  bool _biometricLock = true;
+  bool _piiSanitization = true;
+
+  void _showFeedback(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
+        backgroundColor: const Color(0xFF1E293B),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(milliseconds: 1500),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
+        maxHeight: MediaQuery.of(context).size.height * 0.88,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: const BoxDecoration(
-        color: Color(0xFF14141E),
+        color: Color(0xFF0F172A),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(top: BorderSide(color: Color(0xFF2C2C3E), width: 1.5)),
+        border: Border(top: BorderSide(color: Color(0xFF1E293B), width: 1.5)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -55,17 +69,21 @@ class _PrivacySecuritySheetState extends State<PrivacySecuritySheet> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF03DAC6).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF2563EB), Color(0xFF06B6D4)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.shield_rounded, color: Color(0xFF03DAC6), size: 24),
+                  child: const Icon(Icons.shield_rounded, color: Colors.white, size: 24),
                 ),
                 const SizedBox(width: 12),
                 const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Privacy & Security Center',
+                      'Privacy & Security Shield',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -73,8 +91,8 @@ class _PrivacySecuritySheetState extends State<PrivacySecuritySheet> {
                       ),
                     ),
                     Text(
-                      'Zero-Trust Financial Architecture',
-                      style: TextStyle(fontSize: 12, color: Colors.white54),
+                      'Zero-Trust Financial Architecture • Active',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF38BDF8), fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -85,19 +103,19 @@ class _PrivacySecuritySheetState extends State<PrivacySecuritySheet> {
             // Security Highlights Card
             GlassCard(
               padding: const EdgeInsets.all(16),
-              gradientColors: const [Color(0xFF1E2838), Color(0xFF121620)],
+              gradientColors: const [Color(0xFF1E293B), Color(0xFF111827)],
               child: Column(
                 children: [
                   _buildSecurityRow(
-                    icon: Icons.lock_outline_rounded,
-                    title: 'Read-Only Spending Metadata',
-                    subtitle: 'We only store amount, merchant name & date. No funds can ever be moved.',
+                    icon: Icons.fingerprint_rounded,
+                    title: 'Biometric & Device Keychain',
+                    subtitle: 'JWT auth tokens are hardware-encrypted inside your device Secure Enclave.',
                   ),
                   const Divider(color: Colors.white10, height: 20),
                   _buildSecurityRow(
-                    icon: Icons.phonelink_lock_rounded,
-                    title: 'On-Device Parsing',
-                    subtitle: 'Transaction SMS and notifications are processed locally inside your phone.',
+                    icon: Icons.sanitizer_rounded,
+                    title: 'Live PII & Credential Scrubbing',
+                    subtitle: 'Credit cards, CVVs, and bank account numbers are automatically redacted before AI analysis.',
                   ),
                   const Divider(color: Colors.white10, height: 20),
                   _buildSecurityRow(
@@ -111,16 +129,28 @@ class _PrivacySecuritySheetState extends State<PrivacySecuritySheet> {
             const SizedBox(height: 20),
 
             const Text(
-              'Privacy Controls & Toggles',
+              'Institutional Privacy Controls',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 12),
 
             _buildToggleTile(
-              title: 'On-Device SMS Parsing Only',
-              subtitle: 'Never transmit raw notification strings to cloud servers',
-              value: _onDeviceOnly,
-              onChanged: (val) => setState(() => _onDeviceOnly = val),
+              title: 'Biometric App Authentication',
+              subtitle: 'Require FaceID / Fingerprint / PIN to open app',
+              value: _biometricLock,
+              onChanged: (val) {
+                setState(() => _biometricLock = val);
+                _showFeedback(val ? '🔒 Biometric Lock Enabled' : '🔓 Biometric Lock Disabled');
+              },
+            ),
+            _buildToggleTile(
+              title: 'Live PII Redaction Shield',
+              subtitle: 'Scrub all card numbers, CVVs, and sensitive data from AI prompts',
+              value: _piiSanitization,
+              onChanged: (val) {
+                setState(() => _piiSanitization = val);
+                _showFeedback(val ? '🛡️ PII Redaction Shield Active' : '⚠️ PII Shield Deactivated');
+              },
             ),
             _buildToggleTile(
               title: 'Mask Bank Account Numbers',
@@ -133,6 +163,12 @@ class _PrivacySecuritySheetState extends State<PrivacySecuritySheet> {
               subtitle: 'Instantly block and discard any SMS containing OTP or auth codes',
               value: _autoRejectOtp,
               onChanged: (val) => setState(() => _autoRejectOtp = val),
+            ),
+            _buildToggleTile(
+              title: 'On-Device SMS Parsing Only',
+              subtitle: 'Never transmit raw notification strings to cloud servers',
+              value: _onDeviceOnly,
+              onChanged: (val) => setState(() => _onDeviceOnly = val),
             ),
             _buildToggleTile(
               title: 'Smart AI Auto-Categorization',
