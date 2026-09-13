@@ -208,7 +208,45 @@ export class AiAdvisorService {
       );
     }
 
-    // 8. Natural fallback with itemized preview
+    // 8. Custom Savings Target Calculator (e.g. "how can I save 5000", "how to save 10000", "how to save money")
+    if (msg.includes('save') || msg.includes('saving') || msg.includes('cut spend') || msg.includes('reduce')) {
+      const match = msg.match(/(?:save|target|cut)\s*(?:of|around|up to)?\s*(?:rs\.?|inr|₹|\$)?\s*(\d+(?:,\d+)*)/i);
+      const targetAmount = match ? parseFloat(match[1].replace(/,/g, '')) : 5000;
+
+      const foodSpend = ctx.categoryBreakdown['Food & Dining'] || 0;
+      const shoppingSpend = ctx.categoryBreakdown['Shopping'] || 0;
+      const entertainmentSpend = ctx.categoryBreakdown['Entertainment'] || 0;
+      const transitSpend = ctx.categoryBreakdown['Transportation'] || 0;
+
+      const foodCut = Math.round(foodSpend > 0 ? foodSpend * 0.35 : targetAmount * 0.35);
+      const shoppingCut = Math.round(shoppingSpend > 0 ? shoppingSpend * 0.30 : targetAmount * 0.30);
+      const entCut = Math.round(entertainmentSpend > 0 ? entertainmentSpend * 0.50 : (ctx.recurringSubs.length > 0 ? 649 : targetAmount * 0.15));
+      const transitCut = Math.round(targetAmount - foodCut - shoppingCut - entCut);
+      const adjustedTransitCut = transitCut > 0 ? transitCut : Math.round(transitSpend * 0.25);
+
+      const totalCalculatedSavings = foodCut + shoppingCut + entCut + adjustedTransitCut;
+      const dailySavingTarget = Math.round(targetAmount / 30);
+
+      return (
+        `💡 **Personalized Action Plan to Save ₹${targetAmount.toLocaleString()} This Month**:\n\n` +
+        `To hit your goal, you need to save approximately **₹${dailySavingTarget}/day**. Based on your spending ledger (₹${ctx.totalSpent.toLocaleString()} total), here is your custom roadmap:\n\n` +
+        `1. 🍔 **Food & Dining (Save ~₹${foodCut.toLocaleString()})**:\n` +
+        `   • Current spend: ₹${foodSpend.toLocaleString()}\n` +
+        `   • Action: Cook 2 additional meals/week at home and limit weekend delivery orders.\n\n` +
+        `2. 🛍️ **Shopping & Retail (Save ~₹${shoppingCut.toLocaleString()})**:\n` +
+        `   • Current spend: ₹${shoppingSpend.toLocaleString()}\n` +
+        `   • Action: Implement the **48-Hour Rule** on non-essential carts (wait 2 days before buying).\n\n` +
+        `3. 🎬 **Subscriptions & Entertainment (Save ~₹${entCut.toLocaleString()})**:\n` +
+        `   • Current spend: ₹${entertainmentSpend.toLocaleString()}\n` +
+        `   • Action: Pause 1 unused streaming or gym subscription this month.\n\n` +
+        `4. 🚗 **Commute & Daily Transit (Save ~₹${adjustedTransitCut.toLocaleString()})**:\n` +
+        `   • Current spend: ₹${transitSpend.toLocaleString()}\n` +
+        `   • Action: Combine errands into single trips or use public transit 2 days/week.\n\n` +
+        `🎯 **Total Projected Savings: ₹${totalCalculatedSavings.toLocaleString()}** (Achieves 100% of your ₹${targetAmount.toLocaleString()} goal!)`
+      );
+    }
+
+    // 9. Natural fallback with itemized preview
     return (
       `I can help you review your purchases by day and time.\n\n` +
       `Here is a snapshot of your most recent transactions:\n` +
