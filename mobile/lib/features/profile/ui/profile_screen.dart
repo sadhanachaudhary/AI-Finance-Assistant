@@ -328,11 +328,10 @@ class ProfileScreen extends ConsumerWidget {
       alignment: Alignment.centerLeft,
       child: Text(
         title,
-        style: const TextStyle(
-          fontSize: 13.5,
+        style: AppTypography.bodySmall.copyWith(
           fontWeight: FontWeight.w600,
-          color: Colors.white54,
-          letterSpacing: 0.5,
+          color: AppTheme.textSecondary,
+          letterSpacing: 0.3,
         ),
       ),
     );
@@ -351,26 +350,19 @@ class ProfileScreen extends ConsumerWidget {
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: effectiveColor.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(10),
-          ),
+          decoration: AppDecorations.iconBadge(effectiveColor, radius: 10),
           child: Icon(icon, color: effectiveColor, size: 18),
         ),
         title: Text(
           title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          style: AppTypography.bodyLarge.copyWith(fontSize: 14.5),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               trailing,
-              style: const TextStyle(color: Colors.white54, fontSize: 13),
+              style: AppTypography.bodySmall.copyWith(color: Colors.white54),
             ),
             const SizedBox(width: 6),
             const Icon(Icons.chevron_right, color: Colors.white24, size: 18),

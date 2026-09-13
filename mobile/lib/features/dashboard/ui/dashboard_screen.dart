@@ -248,11 +248,7 @@ class DashboardScreen extends ConsumerWidget {
                   // Quick Actions Row
                   const Text(
                     'Quick Actions',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                    style: AppTypography.h2,
                   ),
                   const SizedBox(height: 12),
                   SingleChildScrollView(
@@ -303,17 +299,13 @@ class DashboardScreen extends ConsumerWidget {
                     children: [
                       const Text(
                         'Recent Transactions',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                        style: AppTypography.h2,
                       ),
                       TextButton(
                         onPressed: () => context.go('/expenses'),
                         child: const Text(
                           'See All',
-                          style: TextStyle(color: AppTheme.trustBlue, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: AppTheme.trustBlue, fontWeight: FontWeight.bold, fontSize: 13.5),
                         ),
                       ),
                     ],
@@ -390,20 +382,16 @@ class _QuickActionButton extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
+              decoration: AppDecorations.iconBadge(color, radius: 12),
               child: Icon(icon, color: color, size: 22),
             ),
             const SizedBox(height: 8),
             Text(
               label,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.caption.copyWith(
                 color: Colors.white70,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],

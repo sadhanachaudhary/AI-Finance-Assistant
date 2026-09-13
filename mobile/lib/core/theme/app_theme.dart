@@ -1,6 +1,134 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+/// Semantic typography tokens and font style definitions across the application.
+class AppTypography {
+  static const TextStyle display = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w800,
+    color: AppTheme.textPrimary,
+    letterSpacing: -0.8,
+    height: 1.2,
+  );
+
+  static const TextStyle h1 = TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
+    color: AppTheme.textPrimary,
+    letterSpacing: -0.4,
+    height: 1.25,
+  );
+
+  static const TextStyle h2 = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    color: AppTheme.textPrimary,
+    letterSpacing: -0.2,
+    height: 1.3,
+  );
+
+  static const TextStyle h3 = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+    color: AppTheme.textPrimary,
+    height: 1.35,
+  );
+
+  static const TextStyle bodyLarge = TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w500,
+    color: AppTheme.textPrimary,
+    height: 1.4,
+  );
+
+  static const TextStyle bodyMedium = TextStyle(
+    fontSize: 13.5,
+    fontWeight: FontWeight.normal,
+    color: AppTheme.textSecondary,
+    height: 1.45,
+  );
+
+  static const TextStyle bodySmall = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: AppTheme.textSecondary,
+    height: 1.4,
+  );
+
+  static const TextStyle caption = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+    color: Colors.white38,
+    letterSpacing: 0.2,
+  );
+
+  static const TextStyle badge = TextStyle(
+    fontSize: 10.5,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.3,
+  );
+}
+
+/// Unified UI decoration system (cards, glassmorphism, badges, and icon squircles).
+class AppDecorations {
+  static BoxDecoration card({
+    Color? color,
+    Border? border,
+    double borderRadius = 16,
+    List<BoxShadow>? shadows,
+  }) =>
+      BoxDecoration(
+        color: color ?? AppTheme.surfaceSlate,
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: border ?? Border.all(color: AppTheme.borderSlate, width: 1),
+        boxShadow: shadows ??
+            [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+      );
+
+  static BoxDecoration glass({
+    List<Color>? gradient,
+    Color? borderColor,
+    double borderRadius = 20,
+  }) =>
+      BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        gradient: LinearGradient(
+          colors: gradient ?? const [Color(0xFF1E293B), Color(0xFF0F172A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(
+          color: borderColor ?? Colors.white.withValues(alpha: 0.09),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.28),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      );
+
+  static BoxDecoration iconBadge(Color color, {double radius = 12}) => BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
+      );
+
+  static BoxDecoration pillBadge(Color color, {double radius = 8}) => BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+      );
+}
+
 class AppTheme {
   // 60% Calm Foundation
   static const Color bgSlate = Color(0xFF121826);
@@ -43,7 +171,7 @@ class AppTheme {
     return TextStyle(
       fontSize: fontSize,
       fontWeight: fontWeight,
-      color: color,
+      color: color ?? textPrimary,
       letterSpacing: letterSpacing,
       fontFeatures: kIsWeb ? const [] : const [FontFeature.tabularFigures()],
     );
@@ -63,6 +191,18 @@ class AppTheme {
         onSurface: Colors.white,
       ),
       fontFamily: 'Inter',
+      textTheme: const TextTheme(
+        displayLarge: AppTypography.display,
+        headlineLarge: AppTypography.h1,
+        headlineMedium: AppTypography.h2,
+        headlineSmall: AppTypography.h3,
+        bodyLarge: AppTypography.bodyLarge,
+        bodyMedium: AppTypography.bodyMedium,
+        bodySmall: AppTypography.bodySmall,
+        labelLarge: AppTypography.h3,
+        labelMedium: AppTypography.bodySmall,
+        labelSmall: AppTypography.badge,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -138,4 +278,3 @@ class AppTheme {
     );
   }
 }
-

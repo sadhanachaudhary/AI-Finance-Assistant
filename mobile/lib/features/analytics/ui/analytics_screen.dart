@@ -257,22 +257,17 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   children: [
                     const Text(
                       'Monthly Budget Limits',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      style: AppTypography.h2,
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: (budgetSummary.health == BudgetHealth.healthy
-                                ? AppTheme.inflowGreen
-                                : budgetSummary.health == BudgetHealth.warning
-                                    ? AppTheme.warningAmber
-                                    : AppTheme.outflowCoral)
-                            .withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                      decoration: AppDecorations.pillBadge(
+                        budgetSummary.health == BudgetHealth.healthy
+                            ? AppTheme.inflowGreen
+                            : budgetSummary.health == BudgetHealth.warning
+                                ? AppTheme.warningAmber
+                                : AppTheme.outflowCoral,
+                        radius: 10,
                       ),
                       child: Text(
                         '${(budgetSummary.percentage * 100).toStringAsFixed(0)}% Budget Used',

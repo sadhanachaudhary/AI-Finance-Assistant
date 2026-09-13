@@ -160,7 +160,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                 children: [
                   // Hero Overall Savings Summary
                   GlassCard(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(22),
                     gradientColors: const [Color(0xFF1E293B), Color(0xFF0F172A)],
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,16 +168,13 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'Total Savings Progress',
-                              style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+                              style: AppTypography.bodySmall.copyWith(color: AppTheme.textSecondary),
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: AppTheme.inflowGreen.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              decoration: AppDecorations.pillBadge(AppTheme.inflowGreen, radius: 10),
                               child: Text(
                                 '${(overallPercentage * 100).toStringAsFixed(0)}% Overall',
                                 style: AppTheme.tabularNumbers(
@@ -193,7 +190,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                         Text(
                           Formatters.formatCurrency(totalSaved),
                           style: AppTheme.tabularNumbers(
-                            color: Colors.white,
+                            color: AppTheme.textPrimary,
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
                             letterSpacing: -0.5,
@@ -202,7 +199,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                         const SizedBox(height: 4),
                         Text(
                           'of ${Formatters.formatCurrency(totalTarget)} total target',
-                          style: const TextStyle(color: Colors.white54, fontSize: 12),
+                          style: AppTypography.bodySmall,
                         ),
                         const SizedBox(height: 14),
                         ClipRRect(
@@ -225,11 +222,11 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                     children: [
                       Text(
                         'Active Targets (${goals.length})',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: AppTypography.h2,
                       ),
                       TextButton.icon(
                         icon: const Icon(Icons.add, size: 18, color: AppTheme.trustBlue),
-                        label: const Text('New Goal', style: TextStyle(color: AppTheme.trustBlue, fontWeight: FontWeight.bold)),
+                        label: const Text('New Goal', style: TextStyle(color: AppTheme.trustBlue, fontWeight: FontWeight.bold, fontSize: 13.5)),
                         onPressed: () => AddGoalSheet.show(context),
                       ),
                     ],
@@ -265,10 +262,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                                   Container(
                                     width: 48,
                                     height: 48,
-                                    decoration: BoxDecoration(
-                                      color: goal.parsedColor.withValues(alpha: 0.18),
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
+                                    decoration: AppDecorations.iconBadge(goal.parsedColor, radius: 14),
                                     child: Icon(goal.parsedIcon, color: goal.parsedColor, size: 24),
                                   ),
                                   const SizedBox(width: 14),
@@ -283,23 +277,16 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                                                 goal.name,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
-                                                ),
+                                                style: AppTypography.h3,
                                               ),
                                             ),
                                             if (isFinished)
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.inflowGreen.withValues(alpha: 0.2),
-                                                  borderRadius: BorderRadius.circular(10),
-                                                ),
+                                                decoration: AppDecorations.pillBadge(AppTheme.inflowGreen, radius: 10),
                                                 child: const Text(
-                                                  '🏆 Goal Reached!',
-                                                  style: TextStyle(color: AppTheme.inflowGreen, fontSize: 10, fontWeight: FontWeight.bold),
+                                                  '🏆 Reached',
+                                                  style: TextStyle(color: AppTheme.inflowGreen, fontSize: 10.5, fontWeight: FontWeight.bold),
                                                 ),
                                               ),
                                           ],

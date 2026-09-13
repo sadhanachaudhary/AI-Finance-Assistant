@@ -39,21 +39,15 @@ class StatCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                decoration: AppDecorations.iconBadge(accentColor, radius: 12),
                 child: Icon(icon, color: accentColor, size: 20),
               ),
               if (trendPercent != null)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: (trendPercent! >= 0
-                            ? AppTheme.inflowGreen
-                            : AppTheme.outflowCoral)
-                        .withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                  decoration: AppDecorations.pillBadge(
+                    trendPercent! >= 0 ? AppTheme.inflowGreen : AppTheme.outflowCoral,
+                    radius: 8,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -89,18 +83,14 @@ class StatCard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white60,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: AppTypography.bodySmall.copyWith(color: AppTheme.textSecondary),
               ),
               const SizedBox(height: 4),
               Text(
                 Formatters.formatCurrency(amount, currency: currency),
                 style: AppTheme.tabularNumbers(
-                  color: Colors.white,
-                  fontSize: 20,
+                  color: AppTheme.textPrimary,
+                  fontSize: 21,
                   fontWeight: FontWeight.bold,
                   letterSpacing: -0.5,
                 ),
@@ -109,10 +99,7 @@ class StatCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle!,
-                  style: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 11,
-                  ),
+                  style: AppTypography.caption,
                 ),
               ],
             ],
