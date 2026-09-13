@@ -29,7 +29,7 @@ export class PiiRedactorService {
     sanitized = sanitized.replace(/(?:cvv|cvc|security\s*code)\s*[:=]?\s*\d{3,4}\b/gi, '[CVV REDACTED]');
 
     // 3. PINs and Passwords
-    sanitized = sanitized.replace(/(?:upi\s*pin|atm\s*pin|pin|password|passwd|pwd)\s*[:=]?\s*[\w\d@#$!%*?&]{3,20}\b/gi, '[CREDENTIAL REDACTED]');
+    sanitized = sanitized.replace(/(?:upi\s*pin|atm\s*pin|pin|password|passwd|pwd)\s*(?:is|[:=])?\s*[\w\d@#$!%*?&]{3,20}\b/gi, '[CREDENTIAL REDACTED]');
 
     // 4. Aadhaar Numbers (12 digits in 4-4-4 format)
     sanitized = sanitized.replace(/\b\d{4}\s\d{4}\s\d{4}\b/g, '[AADHAAR ****-****-XXXX]');
