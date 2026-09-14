@@ -37,3 +37,5 @@ backend/prisma/*.db-journal
 
 # VSCode
 .vscode/
+.neon
+.env.local

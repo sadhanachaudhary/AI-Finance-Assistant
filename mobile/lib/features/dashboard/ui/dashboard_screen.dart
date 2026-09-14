@@ -14,6 +14,8 @@ import '../../expenses/ui/add_expense_sheet.dart';
 import '../../expenses/ui/smart_ingest_sheet.dart';
 import '../../profile/ui/privacy_security_sheet.dart';
 import '../../../shared/providers/security_provider.dart';
+import '../../notifications/providers/notification_provider.dart';
+import '../../notifications/ui/notifications_sheet.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -24,6 +26,7 @@ class DashboardScreen extends ConsumerWidget {
     final expensesState = ref.watch(expensesProvider);
     final totalSpend = ref.watch(totalSpendProvider);
     final categorySpendMap = ref.watch(categorySpendMapProvider);
+    final unreadNotifs = ref.watch(unreadNotificationsCountProvider);
 
     // Find top spending category
     String topCategory = 'None';
@@ -74,14 +77,42 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('No new notifications')),
-              );
-            },
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined, size: 26),
+                onPressed: () => NotificationsSheet.show(context),
+              ),
+              if (unreadNotifs > 0)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEF4444),
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Center(
+                      child: Text(
+                        unreadNotifs > 9 ? '9+' : '$unreadNotifs',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: expensesState.when(

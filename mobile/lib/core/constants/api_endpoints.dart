@@ -19,6 +19,15 @@ abstract final class ApiEndpoints {
   static String billById(String id) => '/bills/$id';
   static const String billStats = '/bills/stats';
   static const String scanBill = '/bills/scan';
+  static const String analyzeBill = '/bills/analyze';
+
+  // --- Notifications & Smart Alerts Endpoints ---
+  static const String notifications = '/notifications';
+  static const String notificationUnreadCount = '/notifications/unread-count';
+  static const String notificationGenerateAlerts = '/notifications/generate-alerts';
+  static const String notificationReadAll = '/notifications/read-all';
+  static String notificationRead(String id) => '/notifications/$id/read';
+  static String notificationById(String id) => '/notifications/$id';
 
   // --- Savings Goals & Targets Endpoints ---
   static const String goals = '/goals';

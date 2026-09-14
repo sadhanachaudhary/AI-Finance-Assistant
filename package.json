@@ -1,0 +1,12 @@
+{
+  "name": "ai-finance-assistant-root",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "neon:deploy": "neon deploy"
+  },
+  "dependencies": {
+    "@neon/config": "^1.4.2"
+  }
+}

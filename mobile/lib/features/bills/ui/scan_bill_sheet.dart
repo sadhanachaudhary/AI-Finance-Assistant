@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/constants/api_endpoints.dart';
 import '../../../shared/utils/formatters.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/category_chip.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../expenses/providers/expense_provider.dart';
 
 class BillLineItem {
@@ -127,25 +129,64 @@ class _ScanBillSheetState extends ConsumerState<ScanBillSheet> {
     }
   }
 
-  void _loadReceiptPreset(Map<String, dynamic> sample) {
+  Future<void> _loadReceiptPreset(Map<String, dynamic> sample) async {
     setState(() {
       _isScanning = true;
     });
 
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        setState(() {
-          _selectedMerchant = sample['merchant'];
-          _selectedCategoryName = sample['category'];
-          _subtotal = sample['subtotal'];
-          _tax = sample['tax'];
-          _total = sample['total'];
-          _items = List<BillLineItem>.from(sample['items']);
-          _isScanning = false;
-        });
-        _matchCategory(_selectedCategoryName);
+    try {
+      final api = ref.read(apiClientProvider);
+      final rawText = (sample['items'] as List<BillLineItem>)
+          .map((i) => '${i.name} ${i.quantity}x ${i.price}')
+          .join('\n');
+
+      final res = await api.post(ApiEndpoints.analyzeBill, {
+        'merchantName': sample['merchant'],
+        'rawText': rawText,
+      });
+
+      if (res.statusCode == 200 && res.data != null && res.data['data'] != null) {
+        final bill = res.data['data']['bill'];
+        if (mounted && bill != null) {
+          final itemsList = (bill['items'] as List? ?? []).map((i) {
+            return BillLineItem(
+              name: i['name'] ?? 'Item',
+              quantity: (i['quantity'] as num?)?.toInt() ?? 1,
+              price: (i['price'] as num?)?.toDouble() ?? 0.0,
+            );
+          }).toList();
+
+          setState(() {
+            _selectedMerchant = bill['merchant'] ?? sample['merchant'];
+            _selectedCategoryName = bill['categoryName'] ?? sample['category'];
+            _subtotal = (bill['subtotal'] as num?)?.toDouble() ?? sample['subtotal'];
+            _tax = (bill['tax'] as num?)?.toDouble() ?? sample['tax'];
+            _total = (bill['total'] as num?)?.toDouble() ?? sample['total'];
+            if (itemsList.isNotEmpty) {
+              _items = itemsList;
+            }
+            _isScanning = false;
+          });
+          _matchCategory(_selectedCategoryName);
+          return;
+        }
       }
-    });
+    } catch (_) {
+      // Safe fallback to client preset if network request fails
+    }
+
+    if (mounted) {
+      setState(() {
+        _selectedMerchant = sample['merchant'];
+        _selectedCategoryName = sample['category'];
+        _subtotal = sample['subtotal'];
+        _tax = sample['tax'];
+        _total = sample['total'];
+        _items = List<BillLineItem>.from(sample['items']);
+        _isScanning = false;
+      });
+      _matchCategory(_selectedCategoryName);
+    }
   }
 
   Future<void> _confirmAndSave() async {
