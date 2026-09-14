@@ -1,0 +1,7 @@
+node_modules
+test-category.json
+test-expense.json
+test-req.json
+*.test.ts
+__tests__
+.env.example
