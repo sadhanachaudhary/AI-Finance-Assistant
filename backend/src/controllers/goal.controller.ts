@@ -56,7 +56,7 @@ export const getGoals = async (req: Request, res: Response, next: NextFunction) 
 export const getGoalById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const goal = await (prisma as any).goal.findFirst({
       where: { id, userId },
@@ -106,7 +106,7 @@ export const createGoal = async (req: Request, res: Response, next: NextFunction
 export const updateGoal = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { name, targetAmount, currentAmount, currency, deadline, category, color, icon } = req.body;
 
     const existingGoal = await (prisma as any).goal.findFirst({
@@ -145,7 +145,7 @@ export const updateGoal = async (req: Request, res: Response, next: NextFunction
 export const depositToGoal = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { amount } = req.body;
 
     const existingGoal = await (prisma as any).goal.findFirst({
@@ -177,7 +177,7 @@ export const depositToGoal = async (req: Request, res: Response, next: NextFunct
 export const deleteGoal = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const existingGoal = await (prisma as any).goal.findFirst({
       where: { id, userId },

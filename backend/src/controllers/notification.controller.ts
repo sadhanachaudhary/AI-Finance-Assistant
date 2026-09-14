@@ -47,7 +47,7 @@ export const getUnreadCount = async (req: Request, res: Response, next: NextFunc
 export const markAsRead = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).user.id;
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const notification = await prisma.notification.updateMany({
       where: { id, userId },
@@ -86,7 +86,7 @@ export const markAllAsRead = async (req: Request, res: Response, next: NextFunct
 export const deleteNotification = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).user.id;
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     await prisma.notification.deleteMany({
       where: { id, userId },
