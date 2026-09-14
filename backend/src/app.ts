@@ -12,6 +12,16 @@ app.use(express.urlencoded({ extended: true }));
 // Health check route with active database ping
 import { checkDbHealth } from './config/prisma';
 
+// Root route
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'ok',
+    message: '🚀 AI Finance Assistant API is live and operational',
+    health: '/health',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/health', async (req: Request, res: Response) => {
   const isDbHealthy = await checkDbHealth();
   if (isDbHealthy) {
