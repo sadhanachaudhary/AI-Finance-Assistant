@@ -45,7 +45,9 @@ const handleGracefulShutdown = async (signal: string) => {
   }
 };
 
-process.on('SIGINT', () => handleGracefulShutdown('SIGINT'));
-process.on('SIGTERM', () => handleGracefulShutdown('SIGTERM'));
+if (!process.env.VERCEL) {
+  process.on('SIGINT', () => handleGracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => handleGracefulShutdown('SIGTERM'));
+}
 
 export default prisma;
