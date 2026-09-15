@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/api_endpoints.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/utils/formatters.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -65,7 +66,7 @@ class _ScanBillSheetState extends ConsumerState<ScanBillSheet> {
       ],
     },
     {
-      'label': '🍕 Swiggy Dinner Invoice',
+      'label': '🍕 Swiggy Invoice',
       'merchant': 'Gourmet Italian Bistro',
       'category': 'Food & Dining',
       'subtotal': 820.0,
@@ -74,7 +75,6 @@ class _ScanBillSheetState extends ConsumerState<ScanBillSheet> {
       'items': [
         const BillLineItem(name: 'Artisan Woodfire Pizza', quantity: 1, price: 480.0),
         const BillLineItem(name: 'Garlic Breadsticks', quantity: 1, price: 160.0),
-        const BillLineItem(name: 'Iced Lemon Tea (2x)', quantity: 2, price: 180.0),
       ],
     },
     {
@@ -86,494 +86,218 @@ class _ScanBillSheetState extends ConsumerState<ScanBillSheet> {
       'total': 880.0,
       'items': [
         const BillLineItem(name: 'Organic Almond Milk 1L', quantity: 2, price: 320.0),
-        const BillLineItem(name: 'Avocados (Pack of 2)', quantity: 1, price: 180.0),
-        const BillLineItem(name: 'Whole Wheat Sourdough', quantity: 1, price: 140.0),
-        const BillLineItem(name: 'Greek Yogurt 400g', quantity: 2, price: 240.0),
-      ],
-    },
-    {
-      'label': '💊 Apollo Pharmacy',
-      'merchant': 'Apollo Pharmacy',
-      'category': 'Health & Fitness',
-      'subtotal': 545.0,
-      'tax': 27.25,
-      'total': 572.25,
-      'items': [
-        const BillLineItem(name: 'Multivitamin Complex 60s', quantity: 1, price: 450.0),
-        const BillLineItem(name: 'Antiseptic Ointment 50g', quantity: 1, price: 95.0),
+        const BillLineItem(name: 'Whole Wheat Bread', quantity: 1, price: 140.0),
       ],
     },
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _matchCategory(_selectedCategoryName));
-  }
-
-  void _matchCategory(String catName) {
-    final categories = ref.read(categoriesProvider).value ?? [];
+  Future<void> _saveAsExpense() async {
+    setState(() => _isScanning = true);
     try {
-      final matched = categories.firstWhere(
-        (c) => c.name.toLowerCase() == catName.toLowerCase(),
-      );
-      setState(() {
-        _selectedCategoryId = matched.id;
-      });
-    } catch (_) {
-      if (categories.isNotEmpty) {
-        setState(() {
-          _selectedCategoryId = categories.first.id;
-        });
-      }
-    }
-  }
-
-  Future<void> _loadReceiptPreset(Map<String, dynamic> sample) async {
-    setState(() {
-      _isScanning = true;
-    });
-
-    try {
-      final api = ref.read(apiClientProvider);
-      final rawText = (sample['items'] as List<BillLineItem>)
-          .map((i) => '${i.name} ${i.quantity}x ${i.price}')
-          .join('\n');
-
-      final res = await api.post(ApiEndpoints.analyzeBill, {
-        'merchantName': sample['merchant'],
-        'rawText': rawText,
-      });
-
-      if (res.statusCode == 200 && res.data != null && res.data['data'] != null) {
-        final bill = res.data['data']['bill'];
-        if (mounted && bill != null) {
-          final itemsList = (bill['items'] as List? ?? []).map((i) {
-            return BillLineItem(
-              name: i['name'] ?? 'Item',
-              quantity: (i['quantity'] as num?)?.toInt() ?? 1,
-              price: (i['price'] as num?)?.toDouble() ?? 0.0,
-            );
-          }).toList();
-
-          setState(() {
-            _selectedMerchant = bill['merchant'] ?? sample['merchant'];
-            _selectedCategoryName = bill['categoryName'] ?? sample['category'];
-            _subtotal = (bill['subtotal'] as num?)?.toDouble() ?? sample['subtotal'];
-            _tax = (bill['tax'] as num?)?.toDouble() ?? sample['tax'];
-            _total = (bill['total'] as num?)?.toDouble() ?? sample['total'];
-            if (itemsList.isNotEmpty) {
-              _items = itemsList;
-            }
-            _isScanning = false;
-          });
-          _matchCategory(_selectedCategoryName);
-          return;
+      final categories = ref.read(categoriesProvider).value ?? [];
+      String? catId = _selectedCategoryId;
+      if (catId == null) {
+        for (final c in categories) {
+          if (c.name.toLowerCase() == _selectedCategoryName.toLowerCase()) {
+            catId = c.id;
+            break;
+          }
         }
       }
-    } catch (_) {
-      // Safe fallback to client preset if network request fails
-    }
 
-    if (mounted) {
-      setState(() {
-        _selectedMerchant = sample['merchant'];
-        _selectedCategoryName = sample['category'];
-        _subtotal = sample['subtotal'];
-        _tax = sample['tax'];
-        _total = sample['total'];
-        _items = List<BillLineItem>.from(sample['items']);
-        _isScanning = false;
-      });
-      _matchCategory(_selectedCategoryName);
-    }
-  }
-
-  Future<void> _confirmAndSave() async {
-    setState(() => _isSaved = true);
-
-    try {
-      final itemSummary = _items.map((i) => '${i.quantity}x ${i.name}').join(', ');
       await ref.read(expensesProvider.notifier).addExpense(
             amount: _total,
             date: DateTime.now(),
             merchant: _selectedMerchant,
-            notes: 'AI OCR: $itemSummary (Tax: ₹${_tax.toStringAsFixed(2)})',
-            categoryId: _selectedCategoryId,
+            notes: 'Scanned Receipt: ${_items.map((i) => "${i.quantity}x ${i.name}").join(', ')}',
+            categoryId: catId,
           );
 
       if (mounted) {
-        Navigator.pop(context);
+        setState(() {
+          _isScanning = false;
+          _isSaved = true;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.receipt_long_rounded, color: Colors.white),
-                const SizedBox(width: 8),
-                Text('Logged ₹${_total.toStringAsFixed(2)} receipt for $_selectedMerchant!'),
-              ],
-            ),
-            backgroundColor: const Color(0xFF03DAC6),
+            backgroundColor: AppTheme.primaryPurple,
+            content: Text('🎉 Saved ${_selectedMerchant} receipt (${Formatters.formatCurrency(_total)})!'),
           ),
         );
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isScanning = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save receipt: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+          SnackBar(content: Text('Failed: $e'), backgroundColor: AppTheme.outflowCoral),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSaved = false);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final categories = ref.watch(categoriesProvider).value ?? [];
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.9,
+        maxHeight: MediaQuery.of(context).size.height * 0.90,
       ),
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 16,
-        bottom: bottomInset > 0 ? bottomInset + 16 : 24,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: const BoxDecoration(
-        color: Color(0xFF14141E),
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(top: BorderSide(color: Color(0xFF2C2C3E), width: 1.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x18000000),
+            blurRadius: 24,
+            offset: Offset(0, -4),
+          ),
+        ],
       ),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Handle
             Center(
               child: Container(
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: AppTheme.borderLight,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 18),
-
-            // Header Title
             Row(
               children: [
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-                    ),
-                    child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                  tooltip: 'Back',
-                ),
-                const SizedBox(width: 12),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF03DAC6).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppTheme.softPurpleBadge,
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Icons.document_scanner_rounded, color: Color(0xFF03DAC6), size: 22),
+                  child: const Icon(Icons.document_scanner_rounded, color: AppTheme.primaryPurple, size: 24),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'AI Receipt Scanner',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                        'AI Receipt & Bill Scanner',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
                       ),
                       Text(
-                        'Extract line items & taxes',
-                        style: TextStyle(fontSize: 12, color: Colors.white54),
+                        'Instant optical line-item extraction',
+                        style: TextStyle(fontSize: 12.5, color: AppTheme.textSecondary),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
-                  ),
                   onPressed: () => Navigator.pop(context),
-                  tooltip: 'Close',
+                  icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
                 ),
               ],
             ),
+            const SizedBox(height: 18),
+
+            // Demo samples
+            const Text('Sample Bills:', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: _sampleReceipts.map((sample) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ActionChip(
+                      label: Text(sample['label']),
+                      backgroundColor: AppTheme.surfaceElevated,
+                      side: const BorderSide(color: AppTheme.borderLight),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      labelStyle: const TextStyle(fontSize: 12, color: AppTheme.textPrimary, fontWeight: FontWeight.w600),
+                      onPressed: () {
+                        setState(() {
+                          _selectedMerchant = sample['merchant'];
+                          _selectedCategoryName = sample['category'];
+                          _subtotal = sample['subtotal'];
+                          _tax = sample['tax'];
+                          _total = sample['total'];
+                          _items = List<BillLineItem>.from(sample['items']);
+                        });
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+
             const SizedBox(height: 16),
 
-            // Camera / File Upload Simulation Box
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E2C),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF2C2C3E), width: 1),
-              ),
+            // Scanned Receipt Preview Card
+            AppCard(
+              padding: const EdgeInsets.all(18),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.camera_alt_outlined, size: 18),
-                        label: const Text('Capture Photo'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6C63FF),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () => _loadReceiptPreset(_sampleReceipts[0]),
+                      Text(
+                        _selectedMerchant,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: AppTheme.textPrimary),
                       ),
-                      const SizedBox(width: 12),
-                      OutlinedButton.icon(
-                        icon: const Icon(Icons.upload_file_outlined, size: 18),
-                        label: const Text('Upload PDF/Image'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white70,
-                          side: const BorderSide(color: Color(0xFF3E3E50)),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppTheme.softPurpleBadge,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        onPressed: () => _loadReceiptPreset(_sampleReceipts[1]),
+                        child: Text(
+                          _selectedCategoryName,
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primaryPurple),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Or choose a sample receipt to test OCR parsing:',
-                    style: TextStyle(fontSize: 11, color: Colors.white54),
-                  ),
-                  const SizedBox(height: 8),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: _sampleReceipts.map((sample) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ActionChip(
-                            backgroundColor: const Color(0xFF14141E),
-                            side: const BorderSide(color: Color(0xFF3E3E50)),
-                            label: Text(
-                              sample['label'],
-                              style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w500),
-                            ),
-                            onPressed: () => _loadReceiptPreset(sample),
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                  const Divider(height: 20, color: AppTheme.borderLight),
+                  ..._items.map((item) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('${item.quantity}x ${item.name}', style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
+                          Text(Formatters.formatCurrency(item.price), style: AppTheme.tabularNumbers(fontSize: 13, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    );
+                  }),
+                  const Divider(height: 20, color: AppTheme.borderLight),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Total Amount', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppTheme.textPrimary)),
+                      Text(
+                        Formatters.formatCurrency(_total),
+                        style: AppTheme.tabularNumbers(fontWeight: FontWeight.w800, fontSize: 18, color: AppTheme.primaryPurple),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 18),
 
-            // OCR Extraction Result Card
-            if (_isScanning)
-              Container(
-                padding: const EdgeInsets.all(24),
-                alignment: Alignment.center,
-                child: const Column(
-                  children: [
-                    CircularProgressIndicator(color: Color(0xFF03DAC6)),
-                    SizedBox(height: 12),
-                    Text('AI Vision OCR is reading line items...', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                  ],
-                ),
-              )
-            else ...[
-              GlassCard(
-                padding: const EdgeInsets.all(16),
-                gradientColors: const [Color(0xFF22203C), Color(0xFF161528)],
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _selectedMerchant,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              Formatters.formatDate(DateTime.now()),
-                              style: const TextStyle(fontSize: 11, color: Colors.white54),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF03DAC6).withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            _selectedCategoryName,
-                            style: const TextStyle(
-                              color: Color(0xFF03DAC6),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Divider(color: Colors.white10, height: 24),
-
-                    // Line Items Table
-                    const Text(
-                      'Extracted Line Items',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white70),
-                    ),
-                    const SizedBox(height: 8),
-                    ..._items.map((item) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            Text(
-                              '${item.quantity}x',
-                              style: const TextStyle(color: Color(0xFF6C63FF), fontWeight: FontWeight.bold, fontSize: 12),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                item.name,
-                                style: const TextStyle(color: Colors.white, fontSize: 13),
-                              ),
-                            ),
-                            Text(
-                              Formatters.formatCurrency(item.price),
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 13),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                    const Divider(color: Colors.white10, height: 24),
-
-                    // Subtotal & Tax Breakdown
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Subtotal', style: TextStyle(color: Colors.white54, fontSize: 12)),
-                        Text(Formatters.formatCurrency(_subtotal), style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Estimated Tax (GST/VAT)', style: TextStyle(color: Colors.white54, fontSize: 12)),
-                        Text(Formatters.formatCurrency(_tax), style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Grand Total',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                        ),
-                        Text(
-                          Formatters.formatCurrency(_total),
-                          style: const TextStyle(
-                            color: Color(0xFF03DAC6),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Category Selector
-              const Text(
-                'Assign Category',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 38,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: categories.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: 6),
-                  itemBuilder: (context, index) {
-                    final cat = categories[index];
-                    final isSelected = _selectedCategoryId == cat.id;
-                    return CategoryChip(
-                      label: cat.name,
-                      icon: cat.parsedIcon,
-                      color: cat.parsedColor,
-                      isSelected: isSelected,
-                      onSelected: (selected) {
-                        setState(() {
-                          _selectedCategoryId = selected ? cat.id : null;
-                          _selectedCategoryName = cat.name;
-                        });
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Save Button
-              AppButton(
-                text: 'Save Bill to Expenses',
-                icon: Icons.check_circle_outline,
-                isLoading: _isSaved,
-                onPressed: _confirmAndSave,
-              ),
-            ],
+            const SizedBox(height: 24),
+            AppButton(
+              text: 'Save Scanned Bill as Expense',
+              onPressed: _saveAsExpense,
+              isLoading: _isScanning,
+              icon: Icons.check_circle_rounded,
+            ),
+            const SizedBox(height: 10),
           ],
         ),
       ),

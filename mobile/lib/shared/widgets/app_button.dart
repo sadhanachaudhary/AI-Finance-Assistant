@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 
 enum AppButtonVariant { primary, secondary, outlined, text }
 
@@ -21,7 +22,7 @@ class AppButton extends StatelessWidget {
     this.variant = AppButtonVariant.primary,
     this.icon,
     this.width = double.infinity,
-    this.height = 52,
+    this.height = 54,
     this.backgroundColor,
     this.textColor,
   });
@@ -34,7 +35,7 @@ class AppButton extends StatelessWidget {
     if (variant == AppButtonVariant.text) {
       return TextButton(
         onPressed: isEnabled ? onPressed : null,
-        child: _buildContent(theme.colorScheme.primary),
+        child: _buildContent(textColor ?? AppTheme.primaryPurple),
       );
     }
 
@@ -47,22 +48,22 @@ class AppButton extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             side: BorderSide(
               color: isEnabled
-                  ? (backgroundColor ?? theme.colorScheme.primary)
-                  : Colors.white24,
+                  ? (backgroundColor ?? AppTheme.primaryPurple)
+                  : AppTheme.borderLight,
               width: 1.5,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
-          child: _buildContent(textColor ?? theme.colorScheme.primary),
+          child: _buildContent(textColor ?? AppTheme.primaryPurple),
         ),
       );
     }
 
-    // Primary & Secondary (Elevated / Gradient)
+    // Primary & Secondary
     final isPrimary = variant == AppButtonVariant.primary;
-    final defaultBg = isPrimary ? const Color(0xFF2563EB) : const Color(0xFF1E293B);
+    final defaultBg = isPrimary ? AppTheme.primaryPurple : AppTheme.surfaceElevated;
     final effectiveBg = backgroundColor ?? defaultBg;
 
     return SizedBox(
@@ -70,10 +71,10 @@ class AppButton extends StatelessWidget {
       height: height,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           gradient: isPrimary && isEnabled && backgroundColor == null
               ? const LinearGradient(
-                  colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                  colors: [AppTheme.primaryPurple, AppTheme.primaryPurpleLight],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
@@ -81,7 +82,7 @@ class AppButton extends StatelessWidget {
           boxShadow: isPrimary && isEnabled
               ? [
                   BoxShadow(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.3),
+                    color: AppTheme.primaryPurple.withValues(alpha: 0.32),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -93,17 +94,17 @@ class AppButton extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: isPrimary && backgroundColor == null
                 ? Colors.transparent
-                : (isEnabled ? effectiveBg : Colors.white10),
+                : (isEnabled ? effectiveBg : const Color(0xFFE2E8F0)),
             shadowColor: Colors.transparent,
-            foregroundColor: textColor ?? Colors.white,
-            disabledBackgroundColor: Colors.white12,
-            disabledForegroundColor: Colors.white38,
+            foregroundColor: textColor ?? (isPrimary ? Colors.white : AppTheme.textPrimary),
+            disabledBackgroundColor: const Color(0xFFF1F5F9),
+            disabledForegroundColor: AppTheme.textTertiary,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 20),
           ),
-          child: _buildContent(textColor ?? Colors.white),
+          child: _buildContent(textColor ?? (isPrimary ? Colors.white : AppTheme.textPrimary)),
         ),
       ),
     );
@@ -131,10 +132,10 @@ class AppButton extends StatelessWidget {
           Text(
             text,
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontSize: 15.5,
+              fontWeight: FontWeight.w700,
               color: contentColor,
-              letterSpacing: 0.2,
+              letterSpacing: 0.1,
             ),
           ),
         ],
@@ -144,10 +145,10 @@ class AppButton extends StatelessWidget {
     return Text(
       text,
       style: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
+        fontSize: 15.5,
+        fontWeight: FontWeight.w700,
         color: contentColor,
-        letterSpacing: 0.2,
+        letterSpacing: 0.1,
       ),
     );
   }

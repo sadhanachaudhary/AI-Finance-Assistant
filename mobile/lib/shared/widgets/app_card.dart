@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 
-/// Primary card container with consistent styling, dark theme foundation,
-/// subtle slate border, configurable radius, padding, and tap support.
+/// Primary card container with consistent styling, crisp light surface,
+/// subtle border, configurable radius, padding, and tap support.
 class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -23,7 +23,7 @@ class AppCard extends StatelessWidget {
     this.margin,
     this.onTap,
     this.color,
-    this.borderRadius = 16,
+    this.borderRadius = 20,
     this.border,
     this.width,
     this.height,
@@ -33,12 +33,24 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveBorder = border ?? Border.all(color: AppTheme.borderSlate, width: 1);
+    final effectiveBorder = border ?? Border.all(color: AppTheme.borderLight, width: 1.2);
     final effectiveDecoration = BoxDecoration(
-      color: color ?? AppTheme.surfaceSlate,
+      color: color ?? AppTheme.surfaceCard,
       borderRadius: BorderRadius.circular(borderRadius),
       border: effectiveBorder,
-      boxShadow: boxShadow,
+      boxShadow: boxShadow ??
+          [
+            BoxShadow(
+              color: const Color(0xFF6C5CE7).withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
     );
 
     if (onTap != null) {
@@ -53,8 +65,8 @@ class AppCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(borderRadius),
-            splashColor: AppTheme.trustBlue.withValues(alpha: 0.12),
-            highlightColor: AppTheme.trustBlue.withValues(alpha: 0.05),
+            splashColor: AppTheme.primaryPurple.withValues(alpha: 0.08),
+            highlightColor: AppTheme.primaryPurple.withValues(alpha: 0.04),
             child: Padding(
               padding: padding,
               child: child,
@@ -76,8 +88,7 @@ class AppCard extends StatelessWidget {
   }
 }
 
-/// Frosted Glass / Premium Gradient Card for prominent widgets, summary panels,
-/// and AI chat callouts.
+/// Frosted Glass / Clean Elevated Gradient Card
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -97,7 +108,7 @@ class GlassCard extends StatelessWidget {
     this.onTap,
     this.gradientColors,
     this.borderColor,
-    this.borderRadius = 20,
+    this.borderRadius = 22,
     this.width,
     this.height,
   });
@@ -106,8 +117,8 @@ class GlassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = gradientColors ??
         [
-          const Color(0xFF1E293B).withValues(alpha: 0.95),
-          const Color(0xFF131B2A).withValues(alpha: 0.85),
+          Colors.white,
+          const Color(0xFFF9FAFF),
         ];
 
     final decoration = BoxDecoration(
@@ -118,13 +129,13 @@ class GlassCard extends StatelessWidget {
         end: Alignment.bottomRight,
       ),
       border: Border.all(
-        color: borderColor ?? Colors.white.withValues(alpha: 0.09),
+        color: borderColor ?? AppTheme.borderLight,
         width: 1.2,
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.28),
-          blurRadius: 18,
+          color: const Color(0xFF6C5CE7).withValues(alpha: 0.06),
+          blurRadius: 20,
           offset: const Offset(0, 8),
         ),
       ],
@@ -142,7 +153,7 @@ class GlassCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(borderRadius),
-            splashColor: AppTheme.trustBlue.withValues(alpha: 0.12),
+            splashColor: AppTheme.primaryPurple.withValues(alpha: 0.08),
             child: Padding(
               padding: padding,
               child: child,
@@ -196,7 +207,7 @@ class SectionHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 18, color: iconColor ?? AppTheme.trustBlue),
+            Icon(icon, size: 18, color: iconColor ?? AppTheme.primaryPurple),
             const SizedBox(width: 8),
           ],
           Expanded(
@@ -210,29 +221,29 @@ class SectionHeader extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: -0.2,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                        letterSpacing: -0.3,
                       ),
                     ),
                     if (badgeText != null) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: (badgeColor ?? AppTheme.trustBlue).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
+                          color: (badgeColor ?? AppTheme.primaryPurple).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: (badgeColor ?? AppTheme.trustBlue).withValues(alpha: 0.3),
+                            color: (badgeColor ?? AppTheme.primaryPurple).withValues(alpha: 0.25),
                           ),
                         ),
                         child: Text(
                           badgeText!,
                           style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: badgeColor ?? AppTheme.trustBlue,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: badgeColor ?? AppTheme.primaryPurple,
                           ),
                         ),
                       ),
@@ -245,7 +256,7 @@ class SectionHeader extends StatelessWidget {
                     subtitle!,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Colors.white54,
+                      color: AppTheme.textSecondary,
                     ),
                   ),
                 ],
@@ -255,7 +266,7 @@ class SectionHeader extends StatelessWidget {
           if (actionLabel != null && onActionTap != null)
             InkWell(
               onTap: onActionTap,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Row(
@@ -264,13 +275,13 @@ class SectionHeader extends StatelessWidget {
                     Text(
                       actionLabel!,
                       style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.trustBlue,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.primaryPurple,
                       ),
                     ),
                     const SizedBox(width: 2),
-                    const Icon(Icons.arrow_forward_ios_rounded, size: 11, color: AppTheme.trustBlue),
+                    const Icon(Icons.arrow_forward_ios_rounded, size: 11, color: AppTheme.primaryPurple),
                   ],
                 ),
               ),
@@ -306,10 +317,10 @@ class SectionCard extends StatelessWidget {
     this.badgeColor,
     this.actionLabel,
     this.onActionTap,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = const EdgeInsets.all(18),
     this.margin,
     this.color,
-    this.borderRadius = 16,
+    this.borderRadius = 20,
   });
 
   @override
@@ -331,7 +342,7 @@ class SectionCard extends StatelessWidget {
             badgeColor: badgeColor,
             actionLabel: actionLabel,
             onActionTap: onActionTap,
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: 14),
           ),
           child,
         ],
@@ -376,11 +387,11 @@ class ActionCardTile extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: iconBgColor ?? iconColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              color: iconBgColor ?? iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: iconColor, size: 22),
           ),
@@ -393,9 +404,9 @@ class ActionCardTile extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
                   ),
                 ),
                 if (subtitle != null) ...[
@@ -404,7 +415,7 @@ class ActionCardTile extends StatelessWidget {
                     subtitle!,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Colors.white54,
+                      color: AppTheme.textSecondary,
                     ),
                   ),
                 ],
@@ -416,8 +427,8 @@ class ActionCardTile extends StatelessWidget {
           else if (onTap != null)
             const Icon(
               Icons.chevron_right_rounded,
-              color: Colors.white38,
-              size: 20,
+              color: AppTheme.textTertiary,
+              size: 22,
             ),
         ],
       ),

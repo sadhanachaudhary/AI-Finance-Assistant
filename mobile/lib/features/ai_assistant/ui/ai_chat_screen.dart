@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/api_endpoints.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/providers/security_provider.dart';
 import '../../../shared/utils/formatters.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -33,24 +35,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   bool _isTyping = false;
 
   final List<String> _suggestedPrompts = [
-    '📊 Summary of all my data',
-    '🎯 How to set budget limits?',
-    '🔁 Detect recurring subscriptions',
-    '🔮 15-day spending forecast',
-    '💡 How to save ₹5,000 this month',
+    'How can I build an emergency fund?',
+    "What's the best budgeting method for me?",
+    'How do I reduce my spending?',
+    'How do I start small investments?',
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _messages.add(
-      ChatMessage(
-        text: "Hello! I'm your AI Financial Advisor. Ask me anything about your spending, how to set budgets, recurring subscriptions, or forecast your month!",
-        isUser: false,
-        timestamp: DateTime.now(),
-      ),
-    );
-  }
 
   @override
   void dispose() {
@@ -93,9 +82,9 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     final sec = ref.read(securityProvider);
 
     if (sec.isRestricted) {
-      aiResponse = "⚠️ **Security Restrictions Active (Restricted Mode)**\n\n"
-          "Live Cloud AI features are locked down because **Layer 1 Core Integrity** or **Layer 2 PII Redaction** is disabled in your settings.\n\n"
-          "🛡️ Go to **Profile → Privacy & Security Shield** and enable all layers to restore full AI capabilities.";
+      aiResponse = "⚠️ **Security Restrictions Active**\n\n"
+          "Live Cloud AI features are locked down because privacy layers are restricted in your settings.\n\n"
+          "🛡️ Go to **Profile → Privacy & Security Shield** to restore full AI capabilities.";
     } else {
       try {
         final apiClient = ref.read(apiClientProvider);
@@ -120,7 +109,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       }
     }
 
-    // If backend response wasn't obtained, use deep local financial advisor
     if (aiResponse.isEmpty) {
       aiResponse = _generateLocalAiAnswer(userMsg);
     }
@@ -147,256 +135,221 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     final goals = ref.read(goalsProvider).value ?? [];
     final lower = query.toLowerCase().trim();
 
-    // Context from previous turn
-    final prevAssistantMsg = _messages.where((m) => !m.isUser).isNotEmpty
-        ? _messages.where((m) => !m.isUser).last.text.toLowerCase()
-        : '';
-    final prevUserMsg = _messages.where((m) => m.isUser).length > 1
-        ? _messages.where((m) => m.isUser).toList().reversed.skip(1).first.text.toLowerCase()
-        : '';
-
-    // Multi-turn affirmation ("yes", "model", "prioritize", "sure", "continue")
-    final isAffirmation = RegExp(r'^(yes|yeah|yep|sure|ok|okay|please|model|give me a model|prioritize|do it|proceed|continue)\b', caseSensitive: false).hasMatch(lower);
-    if (isAffirmation || (lower.length <= 15 && (lower.contains('yes') || lower.contains('model')))) {
-      if (prevUserMsg.contains('sub') || prevUserMsg.contains('recurring') || prevAssistantMsg.contains('subscription') || lower.contains('model') || lower.contains('priorit')) {
-        return _buildLocalSubscriptionPrioritizationModel(totalSpend, expenses);
-      }
-      if (prevAssistantMsg.contains('budget') || prevUserMsg.contains('budget')) {
-        return _buildLocal503020BudgetModel(totalSpend);
-      }
-      return _buildLocalSavingsRoadmap(totalSpend, categoryMap, 5000);
+    // 1. Goal saving plan (Matching Screen 3)
+    if (lower.contains('plan') || lower.contains('car') || lower.contains('10,000') || lower.contains('save')) {
+      return "Here's a simplified plan to save \$10,000 for a car by January next year:\n\n"
+          "1. **Set the Goal**\n"
+          "   • Save \$770/month over 13 months.\n\n"
+          "2. **Analyze Your Budget**\n"
+          "   • Calculate income and expenses.\n"
+          "   • Ensure at least \$770 is left for savings monthly.\n\n"
+          "3. **Cut Costs**\n"
+          "   • Reduce non-essential spending (dining, subscriptions).\n"
+          "   • Automate \$770 savings each month.\n\n"
+          "4. **Boost Income**\n"
+          "   • Consider side gigs or extra work to add to savings.\n\n"
+          "5. **Monitor Progress**\n"
+          "   • Track savings monthly and adjust if needed.";
     }
 
-    // 1. Subscription & Prioritization Query
-    if (lower.contains('priorit') ||
-        lower.contains('model') ||
-        lower.contains('recurring') ||
-        lower.contains('subscription') ||
-        lower.contains('autopay') ||
-        (lower.contains('sub') && (lower.contains('check') || lower.contains('audit') || lower.contains('cancel') || lower.contains('cut')))) {
-      return _buildLocalSubscriptionPrioritizationModel(totalSpend, expenses);
+    // 2. Emergency fund
+    if (lower.contains('emergency fund')) {
+      return "🛡️ **Emergency Fund Strategy**:\n\n"
+          "1. **Target**: Aim for 3-6 months of essential living expenses (~₹1,50,000).\n"
+          "2. **Starter Step**: Save a starter cushion of ₹25,000 in a high-yield liquid account.\n"
+          "3. **Rule**: Automate 10% of every paycheck directly to this fund before spending on wants.";
     }
 
-    // 2. Savings Goals Query
-    if (lower.contains('goal') || lower.contains('target') || lower.contains('emergency fund')) {
-      if (goals.isEmpty) {
-        return "🎯 **Savings Goals Status**:\n\nYou haven't added savings goals yet! Tap the **Goals** tab in the bottom bar to create visual targets like an *Emergency Fund* or *Gadget Savings*.";
-      }
-      final goalsList = goals.map((g) {
-        final pct = g.targetAmount > 0 ? (g.currentAmount / g.targetAmount * 100).toInt() : 0;
-        return "• 🏆 **${g.name}**: ${Formatters.formatCurrency(g.currentAmount)} / ${Formatters.formatCurrency(g.targetAmount)} (**$pct%** achieved)";
-      }).join('\n');
-
-      return "🎯 **Your Active Savings Goals**:\n\n$goalsList\n\n💡 Tap **Goals** in the navigation bar to record a deposit or adjust target deadlines!";
+    // 3. Subscriptions & Prioritization
+    if (lower.contains('sub') || lower.contains('recurring') || lower.contains('reduce')) {
+      return "💳 **Subscription & Cost Reduction Roadmap**:\n\n"
+          "1. **Audit Discretionary Apps**: Review active streaming & food memberships.\n"
+          "2. **The 48-Hour Cart Rule**: Delay online purchases by 48 hours to curb impulse buys.\n"
+          "3. **Meal Planning**: Limit takeout to 2 meals/week, saving up to ₹4,000/month!";
     }
 
-    // 3. Custom Savings Roadmap (e.g. "how to save 5000")
-    if (lower.contains('save') || lower.contains('saving') || lower.contains('cut') || lower.contains('reduce')) {
-      final match = RegExp(r'(?:save|target|cut)\s*(?:of|around|up to)?\s*(?:rs\.?|inr|₹|\$)?\s*(\d+(?:,\d+)*)', caseSensitive: false).firstMatch(lower);
-      final targetAmount = match != null ? double.tryParse(match.group(1)!.replaceAll(',', '')) ?? 5000.0 : 5000.0;
-      return _buildLocalSavingsRoadmap(totalSpend, categoryMap, targetAmount);
-    }
-
-    // 4. Day / Time / Date Lookups
-    final days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    final matchedDay = days.where((d) => lower.contains(d)).firstOrNull;
-
-    if (matchedDay != null || lower.contains('today') || lower.contains('yesterday')) {
-      final filtered = expenses.where((e) {
-        if (matchedDay != null) {
-          return Formatters.formatDayOfWeek(e.date).toLowerCase() == matchedDay;
-        }
-        return true;
-      }).toList();
-
-      if (filtered.isNotEmpty) {
-        final total = filtered.fold(0.0, (s, e) => s + e.amount);
-        final list = filtered.take(6).map((e) => "• **${e.merchant ?? 'Expense'}**: ${Formatters.formatCurrency(e.amount)}\n  🕒 ${Formatters.formatDayOfWeek(e.date)}, ${Formatters.formatDate(e.date)} at ${Formatters.formatTime(e.date)}").join('\n\n');
-        return "📅 **Spending Timeline (${matchedDay != null ? matchedDay.toUpperCase() : 'Recent'})**:\n\n$list\n\n💰 **Total**: ${Formatters.formatCurrency(total)} across ${filtered.length} purchase(s).";
-      }
-    }
-
-    // 5. How to set budget limit
-    if (lower.contains('how to set') || lower.contains('how do i set')) {
-      return "🎯 **How to Set Your Monthly Budget Limit**:\n\n1. Tap on the **Budgets** (Analytics) icon in bottom navigation.\n2. Scroll down to **Monthly Budget Limits**.\n3. **Tap on any category** (e.g. *Food & Dining*).\n4. Enter your limit (e.g. ₹5,000) and tap **Save Limit**.\n\nThe app displays real-time health badges (Safe / Warning / Exceeded) as you spend!";
-    }
-
-    // 6. Overview & Dashboard
-    if (lower.contains('dashboard') || lower.contains('all my data') || lower.contains('overview') || lower.contains('summary')) {
-      final topCats = categoryMap.entries.take(3).map((e) => "• **${e.key}**: ${Formatters.formatCurrency(e.value)}").join('\n');
-      return "📊 **Financial Dashboard Overview**:\n\n• **Total Expenses**: ${Formatters.formatCurrency(totalSpend)} across ${expenses.length} records\n• **Top Spending Categories**:\n$topCats\n\nCheck the **Home** or **Budgets** tab for live interactive charts!";
-    }
-
-    // 7. General fallback
-    return "Based on your current recorded spend of **${Formatters.formatCurrency(totalSpend)}**, here are the actions I can take:\n\n"
-        "1. 💳 **Audit & Prioritize Subscriptions**: Ask *\"Check my recurring subs and give me a model\"*\n"
-        "2. 💡 **Custom Savings Plan**: Ask *\"How can I save ₹5,000 this month?\"*\n"
-        "3. 📅 **Timeline Query**: Ask *\"What did I spend on Saturday?\"*\n"
-        "4. 🎯 **Savings Goals**: Ask *\"How are my savings goals doing?\"*";
-  }
-
-  String _buildLocalSubscriptionPrioritizationModel(double totalSpend, List<dynamic> expenses) {
-    const knownSubs = [
-      {'name': 'Electricity & Water Board', 'amount': 2150.0, 'tier': 'Tier 1: Non-Negotiable Utility'},
-      {'name': 'Gold Gym Membership', 'amount': 1500.0, 'tier': 'Tier 1: Health & Fitness (High ROI)'},
-      {'name': 'Apple iCloud Storage', 'amount': 219.0, 'tier': 'Tier 2: Cloud Infrastructure & Backup'},
-      {'name': 'Netflix Subscription', 'amount': 649.0, 'tier': 'Tier 3: Discretionary Entertainment'},
-    ];
-
-    final monthlyFixed = knownSubs.fold(0.0, (s, item) => s + (item['amount'] as double));
-    final annualFixed = monthlyFixed * 12;
-    final total = totalSpend > 0 ? totalSpend : 28947.0;
-    final needsEst = total * 0.50;
-    final wantsEst = total * 0.30;
-    final savingsEst = total * 0.20;
-
-    return "💳 **Subscription Audit & Prioritization Model**\n\n"
-        "Detected **4 recurring subscriptions** totaling **${Formatters.formatCurrency(monthlyFixed)}/month** (${Formatters.formatCurrency(annualFixed)}/year):\n\n"
-        "### 📊 3-Tier Prioritization Matrix:\n"
-        "1. 🟢 **Tier 1 (Non-Negotiable Needs & Health)**:\n"
-        "   • **Electricity & Utilities** (₹2,150/mo) → *Essential lifeline*\n"
-        "   • **Gold Gym Membership** (₹1,500/mo) → *High physical & mental health ROI*\n\n"
-        "2. 🟡 **Tier 2 (Productivity & Infrastructure)**:\n"
-        "   • **Apple iCloud (2TB)** (₹219/mo) → *Critical data backup & device sync*\n\n"
-        "3. 🔴 **Tier 3 (Discretionary Entertainment — Prime Pruning Target)**:\n"
-        "   • **Netflix Premium** (₹649/mo) → *Save ₹7,788/yr by rotating subscriptions or switching to basic tier*\n\n"
-        "---\n"
-        "### 🏛️ Recommended 50/30/20 Optimization Model\n"
-        "Based on your recorded ledger (${Formatters.formatCurrency(total)}):\n"
-        "• **50% Needs (${Formatters.formatCurrency(needsEst)})**: Utilities, Groceries, Rent, Essential Commute\n"
-        "• **30% Wants (${Formatters.formatCurrency(wantsEst)})**: Dining out, Shopping, Streaming\n"
-        "• **20% Savings/Goals (${Formatters.formatCurrency(savingsEst)})**: Emergency Fund & Target Goals\n\n"
-        "💡 **Action Step**: Pausing Tier 3 entertainment frees up **₹649/mo (₹7,788/year)** to accelerate your Emergency Fund!";
-  }
-
-  String _buildLocal503020BudgetModel(double totalSpend) {
-    final total = totalSpend > 0 ? totalSpend : 28947.0;
-    final needs = total * 0.50;
-    final wants = total * 0.30;
-    final savings = total * 0.20;
-
-    return "🏛️ **50/30/20 Budgeting Allocation Model**\n\n"
-        "Calibrated against your spending ledger (${Formatters.formatCurrency(total)}):\n\n"
-        "1. 🛡️ **50% Needs (${Formatters.formatCurrency(needs)})**:\n"
-        "   • Utilities, Groceries, Rent, Essential Transport.\n\n"
-        "2. 🛍️ **30% Wants (${Formatters.formatCurrency(wants)})**:\n"
-        "   • Dining out, non-essential shopping, entertainment.\n"
-        "   • *Rule*: Apply the **48-Hour Cart Rule** before making discretionary purchases.\n\n"
-        "3. 🎯 **20% Savings/Goals (${Formatters.formatCurrency(savings)})**:\n"
-        "   • Automatic transfer to your Emergency Fund & Savings Goals on salary day.\n\n"
-        "💡 Tap **Budgets** in the navigation bar to set these category limits directly!";
-  }
-
-  String _buildLocalSavingsRoadmap(double totalSpend, Map<String, double> categoryMap, double targetAmount) {
-    final foodSpend = categoryMap['Food & Dining'] ?? 3000.0;
-    final shoppingSpend = categoryMap['Shopping'] ?? 4000.0;
-    final foodCut = (foodSpend * 0.35).roundToDouble();
-    final shoppingCut = (shoppingSpend * 0.30).roundToDouble();
-    const entCut = 649.0;
-    final transitCut = (targetAmount - foodCut - shoppingCut - entCut).clamp(0.0, 3000.0);
-    final totalSavings = foodCut + shoppingCut + entCut + transitCut;
-    final dailyTarget = (targetAmount / 30).round();
-
-    return "💡 **Personalized Action Plan to Save ${Formatters.formatCurrency(targetAmount)} This Month**:\n\n"
-        "To achieve your goal, aim to save approximately **₹$dailyTarget/day**. Here is your customized roadmap:\n\n"
-        "1. 🍔 **Food & Dining (Save ~${Formatters.formatCurrency(foodCut)})**:\n"
-        "   • Cook 2 extra meals/week at home and limit weekend delivery apps.\n\n"
-        "2. 🛍️ **Shopping & Retail (Save ~${Formatters.formatCurrency(shoppingCut)})**:\n"
-        "   • Implement the **48-Hour Rule** on non-essential impulse items.\n\n"
-        "3. 🎬 **Subscriptions & Entertainment (Save ~${Formatters.formatCurrency(entCut)})**:\n"
-        "   • Pause 1 unused streaming subscription (e.g. Netflix) this month.\n\n"
-        "4. 🚗 **Daily Transit (Save ~${Formatters.formatCurrency(transitCut)})**:\n"
-        "   • Batch errands into single trips or use public transit 2 days/week.\n\n"
-        "🎯 **Total Projected Savings: ${Formatters.formatCurrency(totalSavings)}** (Achieves 100% of your target!)";
+    // 4. Default overview
+    return "Based on your current recorded spend of **${Formatters.formatCurrency(totalSpend)}**:\n\n"
+        "1. 🎯 **Track Savings Targets**: You have ${goals.length} active savings goals.\n"
+        "2. 💡 **Budget Optimization**: Tap **Budgets** to cap high-spend categories like *Food & Dining*.\n"
+        "3. 🚀 **Smart Investments**: Start with index funds or recurring monthly deposits!";
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasMessages = _messages.isNotEmpty;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F19),
+      backgroundColor: AppTheme.bgCanvas,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0B0F19),
+        title: const Text('AI Assistant'),
+        centerTitle: true,
+        backgroundColor: AppTheme.bgCanvas,
         elevation: 0,
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF2563EB), Color(0xFF06B6D4)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.35),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 20),
+        actions: [
+          if (hasMessages)
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded, color: AppTheme.textSecondary),
+              tooltip: 'Reset Conversation',
+              onPressed: () {
+                setState(() {
+                  _messages.clear();
+                });
+              },
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'AI Financial Advisor',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF10B981),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    const Text(
-                      'Gemini Live • Online',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: Color(0xFF94A3B8),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFF1E293B), height: 1),
-        ),
+        ],
       ),
       body: Column(
         children: [
-          // Chat Messages View
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return _buildMessageBubble(message);
-              },
+          // If no messages, show Screen 2 Welcome / Empty State
+          if (!hasMessages)
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 30),
+                    // Concentric Glowing Pulsing Rings
+                    Center(
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            width: 170,
+                            height: 170,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFF6C5CE7).withValues(alpha: 0.04),
+                              border: Border.all(
+                                color: const Color(0xFF6C5CE7).withValues(alpha: 0.1),
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            width: 130,
+                            height: 130,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFF6C5CE7).withValues(alpha: 0.08),
+                              border: Border.all(
+                                color: const Color(0xFF6C5CE7).withValues(alpha: 0.15),
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            width: 90,
+                            height: 90,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF6C5CE7), Color(0xFF8E7CFF)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF6C5CE7).withValues(alpha: 0.4),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.auto_awesome,
+                              color: Colors.white,
+                              size: 40,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 36),
+                    const Text(
+                      'Ask Zyno AI anything about your savings\nand financial improvement.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w500,
+                        height: 1.45,
+                      ),
+                    ),
+                    const SizedBox(height: 36),
+                    const Text(
+                      'Suggested',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textTertiary,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ..._suggestedPrompts.map((prompt) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: InkWell(
+                          onTap: () => _sendMessage(prompt),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppTheme.borderLight, width: 1.2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF6C5CE7).withValues(alpha: 0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    prompt,
+                                    style: const TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: 13,
+                                  color: AppTheme.textTertiary,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            )
+          else
+            // Chat Messages View (Matching Screen 3)
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final message = _messages[index];
+                  return _buildMessageBubble(message);
+                },
+              ),
             ),
-          ),
+
           if (_isTyping)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -405,9 +358,15 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFF334155)),
+                      border: Border.all(color: AppTheme.borderLight),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF6C5CE7).withValues(alpha: 0.04),
+                          blurRadius: 10,
+                        ),
+                      ],
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -415,12 +374,12 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         SizedBox(
                           width: 14,
                           height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF38BDF8)),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryPurple),
                         ),
                         SizedBox(width: 10),
                         Text(
-                          'Advisor is formulating insights...',
-                          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.w500),
+                          'Zyno AI is formulating your financial plan...',
+                          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -428,100 +387,137 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 ],
               ),
             ),
-          // Quick prompt chips
-          Container(
-            height: 44,
-            margin: const EdgeInsets.only(bottom: 10),
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _suggestedPrompts.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final prompt = _suggestedPrompts[index];
-                return InkWell(
-                  onTap: () => _sendMessage(prompt),
-                  borderRadius: BorderRadius.circular(22),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF131D31),
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.35)),
-                    ),
-                    child: Center(
-                      child: Text(
-                        prompt,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: Color(0xFF93C5FD),
-                          fontWeight: FontWeight.w600,
+
+          // Quick Suggested prompt chips above input bar (when in chat)
+          if (hasMessages)
+            Container(
+              height: 38,
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _suggestedPrompts.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final prompt = _suggestedPrompts[index];
+                  return InkWell(
+                    onTap: () => _sendMessage(prompt),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppTheme.borderLight),
+                      ),
+                      child: Center(
+                        child: Text(
+                          prompt,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-          // Text Input Bar
+
+          // Bottom Pill-Shaped Input Bar (Matching Screen 2 & 3)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             decoration: const BoxDecoration(
-              color: Color(0xFF0F172A),
-              border: Border(top: BorderSide(color: Color(0xFF1E293B), width: 1)),
+              color: Colors.transparent,
             ),
             child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1E293B),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0xFF334155)),
-                      ),
+              top: false,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: AppTheme.primaryPurple.withValues(alpha: 0.35),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6C5CE7).withValues(alpha: 0.08),
+                      blurRadius: 18,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 14),
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: AppTheme.primaryPurple,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
                       child: TextField(
                         controller: _textController,
-                        style: const TextStyle(color: Colors.white, fontSize: 14.5),
+                        style: const TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w500,
+                        ),
                         textInputAction: TextInputAction.send,
                         onSubmitted: _sendMessage,
                         decoration: const InputDecoration(
-                          hintText: 'Ask financial questions, prioritize subs, or budget...',
-                          hintStyle: TextStyle(color: Color(0xFF64748B), fontSize: 13.5),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          hintText: 'Ask AI anything',
+                          hintStyle: TextStyle(
+                            color: AppTheme.textTertiary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.normal,
+                          ),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 14),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF2563EB).withValues(alpha: 0.4),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
+                    IconButton(
+                      icon: const Icon(Icons.mic_none_rounded, color: AppTheme.textSecondary, size: 22),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('🎙️ Voice prompt listening ready! Type or speak your query.')),
+                        );
+                      },
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(right: 6),
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppTheme.primaryPurple, AppTheme.primaryPurpleLight],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                      ],
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryPurple.withValues(alpha: 0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                        onPressed: () => _sendMessage(_textController.text),
+                      ),
                     ),
-                    child: IconButton(
-                      icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
-                      onPressed: () => _sendMessage(_textController.text),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -533,42 +529,53 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   Widget _buildMessageBubble(ChatMessage msg) {
     if (msg.isUser) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.only(bottom: 16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: const Color(0xFFF0EDFF), // Soft iris purple lavender
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(4),
+                    topLeft: Radius.circular(22),
+                    topRight: Radius.circular(22),
+                    bottomLeft: Radius.circular(22),
+                    bottomRight: Radius.circular(6),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.25),
-                      blurRadius: 8,
+                      color: const Color(0xFF6C5CE7).withValues(alpha: 0.05),
+                      blurRadius: 10,
                       offset: const Offset(0, 3),
                     ),
                   ],
                 ),
-                child: Text(
-                  msg.text,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w500,
-                    height: 1.4,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      msg.text,
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    InkWell(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: msg.text));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Copied to clipboard')),
+                        );
+                      },
+                      child: const Icon(Icons.edit_outlined, size: 13, color: AppTheme.primaryPurple),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -577,54 +584,60 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       );
     }
 
+    // AI Response Bubble (Matching Screen 3)
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 34,
-            height: 34,
-            margin: const EdgeInsets.only(right: 10, top: 2),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0284C7), Color(0xFF06B6D4)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppTheme.borderLight, width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF0284C7).withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+                  color: const Color(0xFF6C5CE7).withValues(alpha: 0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 18),
-          ),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(20),
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildFormattedText(msg.text),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.copy_rounded, size: 16, color: AppTheme.textTertiary),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: msg.text));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Plan copied to clipboard')),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 14),
+                    IconButton(
+                      icon: const Icon(Icons.thumb_up_outlined, size: 16, color: AppTheme.textTertiary),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Feedback saved. Thank you!')),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                border: Border.all(color: const Color(0xFF334155)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: _buildFormattedText(msg.text),
+              ],
             ),
           ),
         ],
@@ -645,18 +658,15 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           TextSpan(
             text: '$headingText\n',
             style: const TextStyle(
-              color: Color(0xFF60A5FA),
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              height: 1.6,
+              color: AppTheme.primaryPurple,
+              fontSize: 15.5,
+              fontWeight: FontWeight.w800,
+              height: 1.5,
             ),
           ),
         );
-      } else if (line.trim().startsWith('•') || line.trim().startsWith('-') || line.trim().startsWith('*')) {
-        _parseInlineMarkdown(line, spans, isBullet: true);
-        spans.add(const TextSpan(text: '\n'));
       } else {
-        _parseInlineMarkdown(line, spans, isBullet: false);
+        _parseInlineMarkdown(line, spans);
         if (i < lines.length - 1) {
           spans.add(const TextSpan(text: '\n'));
         }
@@ -666,8 +676,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     return Text.rich(
       TextSpan(
         style: const TextStyle(
-          color: Color(0xFFF1F5F9),
-          fontSize: 14.5,
+          color: AppTheme.textPrimary,
+          fontSize: 14,
           height: 1.5,
           letterSpacing: 0.1,
         ),
@@ -676,7 +686,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     );
   }
 
-  void _parseInlineMarkdown(String text, List<TextSpan> spans, {bool isBullet = false}) {
+  void _parseInlineMarkdown(String text, List<TextSpan> spans) {
     final parts = text.split('**');
     for (int j = 0; j < parts.length; j++) {
       final part = parts[j];
@@ -687,9 +697,9 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         TextSpan(
           text: part,
           style: TextStyle(
-            color: isBold ? Colors.white : const Color(0xFFE2E8F0),
-            fontWeight: isBold ? FontWeight.w700 : FontWeight.w400,
-            fontSize: 14.5,
+            color: isBold ? AppTheme.textPrimary : const Color(0xFF334155),
+            fontWeight: isBold ? FontWeight.w800 : FontWeight.w400,
+            fontSize: 14,
           ),
         ),
       );

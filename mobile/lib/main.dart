@@ -18,8 +18,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'AI Finance',
-      theme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark, // Default to our sleek dark theme
+      theme: AppTheme.lightTheme,
+      themeMode: ThemeMode.light,
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
     );

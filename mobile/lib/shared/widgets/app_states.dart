@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import '../utils/error_mapper.dart';
 import 'app_button.dart';
 
@@ -21,7 +22,7 @@ class AppLoading extends StatelessWidget {
           CircularProgressIndicator(
             strokeWidth: 3,
             valueColor: AlwaysStoppedAnimation<Color>(
-              color ?? const Color(0xFF6C63FF),
+              color ?? AppTheme.primaryPurple,
             ),
           ),
           if (message != null) ...[
@@ -29,7 +30,7 @@ class AppLoading extends StatelessWidget {
             Text(
               message!,
               style: const TextStyle(
-                color: Colors.white60,
+                color: AppTheme.textSecondary,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -83,16 +84,16 @@ class AppErrorView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: (isNetwork ? const Color(0xFFF59E0B) : const Color(0xFFFB7185)).withValues(alpha: 0.15),
+                color: (isNetwork ? const Color(0xFFF59E0B) : AppTheme.outflowCoral).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: (isNetwork ? const Color(0xFFF59E0B) : const Color(0xFFFB7185)).withValues(alpha: 0.3),
+                  color: (isNetwork ? const Color(0xFFF59E0B) : AppTheme.outflowCoral).withValues(alpha: 0.25),
                   width: 1.5,
                 ),
               ),
               child: Icon(
                 isNetwork ? Icons.wifi_off_rounded : Icons.error_outline_rounded,
-                color: isNetwork ? const Color(0xFFF59E0B) : const Color(0xFFFB7185),
+                color: isNetwork ? const Color(0xFFF59E0B) : AppTheme.outflowCoral,
                 size: 38,
               ),
             ),
@@ -101,8 +102,8 @@ class AppErrorView extends StatelessWidget {
               displayTitle,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.white,
-                fontSize: 17,
+                color: AppTheme.textPrimary,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -111,7 +112,7 @@ class AppErrorView extends StatelessWidget {
               displayMessage,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.white70,
+                color: AppTheme.textSecondary,
                 fontSize: 14,
                 height: 1.4,
               ),
@@ -121,19 +122,19 @@ class AppErrorView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFF334155)),
+                  color: AppTheme.surfaceElevated,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.borderLight),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.lightbulb_outline_rounded, size: 16, color: Color(0xFF38BDF8)),
+                    const Icon(Icons.lightbulb_outline_rounded, size: 16, color: AppTheme.primaryPurple),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
                         displayTip,
-                        style: const TextStyle(fontSize: 12, color: Color(0xFFE2E8F0)),
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textPrimary),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -185,14 +186,14 @@ class AppEmptyState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E1E1E),
+                color: AppTheme.softPurpleBadge,
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF2C2C2C), width: 1.5),
+                border: Border.all(color: AppTheme.primaryPurple.withValues(alpha: 0.2), width: 1.5),
               ),
               child: Icon(
                 icon,
-                color: const Color(0xFF6C63FF),
-                size: 48,
+                color: AppTheme.primaryPurple,
+                size: 44,
               ),
             ),
             const SizedBox(height: 18),
@@ -202,7 +203,7 @@ class AppEmptyState extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: AppTheme.textPrimary,
               ),
             ),
             const SizedBox(height: 6),
@@ -211,7 +212,7 @@ class AppEmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 13,
-                color: Colors.white54,
+                color: AppTheme.textSecondary,
                 height: 1.4,
               ),
             ),

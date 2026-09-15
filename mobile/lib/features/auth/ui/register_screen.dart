@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -68,16 +69,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error.toString()),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            backgroundColor: AppTheme.outflowCoral,
           ),
         );
       }
     });
 
     return Scaffold(
+      backgroundColor: AppTheme.bgCanvas,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: AppTheme.textPrimary),
           onPressed: () => context.pop(),
         ),
       ),
@@ -99,16 +101,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                         'Create Account',
                         style: TextStyle(
                           fontSize: 28,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.textPrimary,
                           letterSpacing: -0.5,
                         ),
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Start your journey to financial freedom',
+                        'Start your journey to financial freedom with Zyno AI',
                         style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.white54,
+                          fontSize: 14.5,
+                          color: AppTheme.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 36),
@@ -139,18 +142,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                         hintText: 'At least 6 characters',
                         prefixIcon: Icons.lock_outline,
                         isPassword: true,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => _handleRegister(),
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'Enter password';
+                          if (v == null || v.trim().isEmpty) return 'Enter password';
                           if (v.length < 6) return 'Password must be at least 6 characters';
                           return null;
                         },
-                        onSubmitted: (_) => _handleRegister(),
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 30),
                       AppButton(
-                        text: 'Sign Up',
-                        isLoading: authState.isLoading,
+                        text: 'Create Account',
                         onPressed: _handleRegister,
+                        isLoading: authState.isLoading,
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Already have an account?',
+                            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                          ),
+                          TextButton(
+                            onPressed: () => context.pop(),
+                            child: const Text(
+                              'Sign In',
+                              style: TextStyle(
+                                color: AppTheme.primaryPurple,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

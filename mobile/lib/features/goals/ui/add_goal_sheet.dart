@@ -29,16 +29,16 @@ class _AddGoalSheetState extends ConsumerState<AddGoalSheet> {
 
   DateTime? _selectedDeadline = DateTime.now().add(const Duration(days: 90));
   String _selectedIcon = 'emergency';
-  String _selectedColor = '0xFF10B981';
+  String _selectedColor = '0xFF6C5CE7';
   bool _isLoading = false;
 
   final List<Map<String, dynamic>> _iconPresets = [
     {'key': 'emergency', 'label': 'Safety', 'icon': Icons.shield_outlined, 'color': '0xFF10B981'},
-    {'key': 'travel', 'label': 'Vacation', 'icon': Icons.flight_takeoff_rounded, 'color': '0xFF3B82F6'},
-    {'key': 'laptop', 'label': 'Gadgets', 'icon': Icons.laptop_mac_rounded, 'color': '0xFF8B5CF6'},
+    {'key': 'travel', 'label': 'Vacation', 'icon': Icons.flight_takeoff_rounded, 'color': '0xFF6C5CE7'},
+    {'key': 'laptop', 'label': 'Gadgets', 'icon': Icons.laptop_mac_rounded, 'color': '0xFF8E7CFF'},
     {'key': 'car', 'label': 'Vehicle', 'icon': Icons.directions_car_rounded, 'color': '0xFFF59E0B'},
-    {'key': 'home', 'label': 'Home', 'icon': Icons.home_rounded, 'color': '0xFF06B6D4'},
-    {'key': 'savings', 'label': 'General', 'icon': Icons.savings_outlined, 'color': '0xFFEC4899'},
+    {'key': 'home', 'label': 'Home', 'icon': Icons.home_rounded, 'color': '0xFF10B981'},
+    {'key': 'savings', 'label': 'General', 'icon': Icons.savings_outlined, 'color': '0xFF6C5CE7'},
   ];
 
   @override
@@ -70,7 +70,7 @@ class _AddGoalSheetState extends ConsumerState<AddGoalSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: AppTheme.inflowGreen,
+            backgroundColor: AppTheme.primaryPurple,
             content: Text('🎉 Savings Goal "${_nameController.text.trim()}" activated!'),
           ),
         );
@@ -94,9 +94,15 @@ class _AddGoalSheetState extends ConsumerState<AddGoalSheet> {
       margin: EdgeInsets.only(bottom: bottomInset),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: const BoxDecoration(
-        color: AppTheme.bgSlate,
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(top: BorderSide(color: AppTheme.borderSlate, width: 1.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x18000000),
+            blurRadius: 24,
+            offset: Offset(0, -4),
+          ),
+        ],
       ),
       child: SingleChildScrollView(
         child: Form(
@@ -110,218 +116,127 @@ class _AddGoalSheetState extends ConsumerState<AddGoalSheet> {
                   width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: AppTheme.borderLight,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-                      ),
-                      child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                    tooltip: 'Back',
-                  ),
-                  const SizedBox(width: 12),
-                  const Icon(Icons.flag_circle_rounded, color: AppTheme.inflowGreen, size: 24),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: Text(
-                      'Create Savings Goal',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
+                  const Text(
+                    'Create Savings Target',
+                    style: TextStyle(color: AppTheme.textPrimary, fontSize: 19, fontWeight: FontWeight.w800),
                   ),
                   IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    icon: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
-                    ),
                     onPressed: () => Navigator.pop(context),
-                    tooltip: 'Close',
+                    icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-
-              // Preset Icon Selector
-              const Text('Select Category / Icon', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 64,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _iconPresets.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: 10),
-                  itemBuilder: (context, index) {
-                    final item = _iconPresets[index];
-                    final isSelected = _selectedIcon == item['key'];
-                    final color = Color(int.parse(item['color']));
-
-                    return InkWell(
-                      onTap: () {
-                        setState(() {
-                          _selectedIcon = item['key'] as String;
-                          _selectedColor = item['color'] as String;
-                          if (_nameController.text.isEmpty) {
-                            _nameController.text = '${item['label']} Fund';
-                          }
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        width: 60,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isSelected ? color.withValues(alpha: 0.25) : AppTheme.surfaceSlate,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isSelected ? color : AppTheme.borderSlate,
-                            width: isSelected ? 2 : 1,
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(item['icon'] as IconData, color: isSelected ? Colors.white : color, size: 22),
-                            const SizedBox(height: 4),
-                            Text(
-                              item['label'] as String,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                color: isSelected ? Colors.white : Colors.white60,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 18),
-
-              // Goal Name
+              const SizedBox(height: 16),
               AppTextField(
                 controller: _nameController,
                 labelText: 'Goal Title',
-                hintText: 'e.g. Emergency Fund, New Laptop',
-                prefixIcon: Icons.edit_note_rounded,
-                validator: (val) => val == null || val.trim().isEmpty ? 'Please enter a goal title' : null,
+                hintText: 'e.g., Emergency Cushion, iPhone 16, Bali Vacation',
+                prefixIcon: Icons.flag_rounded,
+                autofocus: true,
+                validator: (val) => val == null || val.trim().isEmpty ? 'Please enter goal title' : null,
               ),
-              const SizedBox(height: 16),
-
-              // Target Amount & Initial Deposit Row
+              const SizedBox(height: 14),
               Row(
                 children: [
                   Expanded(
                     child: AppTextField(
                       controller: _targetAmountController,
-                      labelText: 'Target Amount (₹)',
+                      labelText: 'Target (₹)',
                       hintText: '50000',
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.currency_rupee,
                       validator: (val) {
-                        if (val == null || val.trim().isEmpty) return 'Required';
-                        final num = double.tryParse(val.trim());
-                        if (num == null || num <= 0) return 'Must be > 0';
+                        final n = double.tryParse(val ?? '');
+                        if (n == null || n <= 0) return 'Invalid target';
                         return null;
                       },
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: AppTextField(
                       controller: _initialAmountController,
                       labelText: 'Initial Deposit (₹)',
-                      hintText: '0 (optional)',
+                      hintText: '0',
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      prefixIcon: Icons.account_balance_wallet_outlined,
+                      prefixIcon: Icons.savings_outlined,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-
-              // Target Date
-              const Text('Target Completion Date', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _selectedDeadline ?? DateTime.now().add(const Duration(days: 90)),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
-                  );
-                  if (picked != null) {
-                    setState(() => _selectedDeadline = picked);
-                  }
-                },
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceSlate,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppTheme.borderSlate, width: 1),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.calendar_today_outlined, size: 18, color: AppTheme.trustTeal),
-                          const SizedBox(width: 10),
-                          Text(
-                            _selectedDeadline != null
-                                ? '${_selectedDeadline!.day} ${_getMonthName(_selectedDeadline!.month)} ${_selectedDeadline!.year}'
-                                : 'No deadline set',
-                            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+              const Text('Goal Category / Icon', style: TextStyle(color: AppTheme.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 10),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _iconPresets.map((preset) {
+                    final isSelected = _selectedIcon == preset['key'];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedIcon = preset['key'] as String;
+                            _selectedColor = preset['color'] as String;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppTheme.softPurpleBadge : AppTheme.surfaceElevated,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected ? AppTheme.primaryPurple : AppTheme.borderLight,
+                              width: 1.5,
+                            ),
                           ),
-                        ],
+                          child: Row(
+                            children: [
+                              Icon(
+                                preset['icon'] as IconData,
+                                color: isSelected ? AppTheme.primaryPurple : AppTheme.textSecondary,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                preset['label'] as String,
+                                style: TextStyle(
+                                  color: isSelected ? AppTheme.primaryPurple : AppTheme.textPrimary,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      const Icon(Icons.chevron_right, size: 18, color: Colors.white38),
-                    ],
-                  ),
+                    );
+                  }).toList(),
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Submit Button
               AppButton(
                 text: 'Activate Goal',
-                isLoading: _isLoading,
-                icon: Icons.check_circle_outline_rounded,
                 onPressed: _submit,
+                isLoading: _isLoading,
+                icon: Icons.rocket_launch_rounded,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
             ],
           ),
         ),
       ),
     );
-  }
-
-  static String _getMonthName(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return months[month - 1];
   }
 }

@@ -22,9 +22,15 @@ class ProfileScreen extends ConsumerWidget {
       builder: (ctx) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         decoration: const BoxDecoration(
-          color: AppTheme.bgSlate,
+          color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(top: BorderSide(color: AppTheme.borderSlate, width: 1.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x18000000),
+              blurRadius: 24,
+              offset: Offset(0, -4),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -35,48 +41,23 @@ class ProfileScreen extends ConsumerWidget {
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: AppTheme.borderLight,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
+            const SizedBox(height: 18),
             Row(
               children: [
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-                    ),
-                    child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
-                  ),
-                  onPressed: () => Navigator.pop(ctx),
-                  tooltip: 'Back',
-                ),
-                const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
                     'Select Preferred Currency',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
                   ),
                 ),
                 IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
-                  ),
+                  icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary, size: 20),
                   onPressed: () => Navigator.pop(ctx),
-                  tooltip: 'Close',
                 ),
               ],
             ),
@@ -86,10 +67,10 @@ class ProfileScreen extends ConsumerWidget {
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppTheme.trustBlue.withValues(alpha: 0.15) : AppTheme.surfaceSlate,
-                  borderRadius: BorderRadius.circular(14),
+                  color: isSelected ? AppTheme.softPurpleBadge : AppTheme.surfaceElevated,
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isSelected ? AppTheme.trustBlue : AppTheme.borderSlate,
+                    color: isSelected ? AppTheme.primaryPurple : AppTheme.borderLight,
                     width: isSelected ? 1.5 : 1,
                   ),
                 ),
@@ -99,18 +80,18 @@ class ProfileScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? AppTheme.trustBlue : Colors.white,
+                      color: isSelected ? AppTheme.primaryPurple : AppTheme.textPrimary,
                     ),
                   ),
                   title: Text(
                     c.name,
                     style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: AppTheme.textPrimary,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     ),
                   ),
                   trailing: isSelected
-                      ? const Icon(Icons.check_circle_rounded, color: AppTheme.trustBlue)
+                      ? const Icon(Icons.check_circle_rounded, color: AppTheme.primaryPurple)
                       : null,
                   onTap: () {
                     ref.read(currencyProvider.notifier).setCurrency(c);
@@ -135,24 +116,25 @@ class ProfileScreen extends ConsumerWidget {
     final expenses = ref.watch(expensesProvider).value ?? [];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Profile & Settings')),
+      backgroundColor: AppTheme.bgCanvas,
+      appBar: AppBar(title: const Text('Profile & Settings')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(
           children: [
             // User Avatar Card
-            GlassCard(
+            AppCard(
               padding: const EdgeInsets.all(20),
-              gradientColors: const [Color(0xFF1E293B), Color(0xFF0F172A)],
+              borderRadius: 24,
               child: Row(
                 children: [
                   Container(
-                    width: 60,
-                    height: 60,
+                    width: 58,
+                    height: 58,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
-                        colors: [AppTheme.trustBlue, AppTheme.trustTeal],
+                        colors: [AppTheme.primaryPurple, AppTheme.primaryPurpleLight],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -160,11 +142,7 @@ class ProfileScreen extends ConsumerWidget {
                     child: Center(
                       child: Text(
                         userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
                   ),
@@ -177,35 +155,25 @@ class ProfileScreen extends ConsumerWidget {
                           userName,
                           style: const TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           userEmail,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.white54,
-                          ),
+                          style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppTheme.inflowGreen.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
+                            color: AppTheme.softPurpleBadge,
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            '${expenses.length} Records Logged',
-                            style: const TextStyle(
-                              color: AppTheme.inflowGreen,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          child: const Text(
+                            '💎 Smart Premium Plan',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primaryPurple),
                           ),
                         ),
                       ],
@@ -214,163 +182,86 @@ class ProfileScreen extends ConsumerWidget {
                 ],
               ),
             ),
+
             const SizedBox(height: 24),
 
-            // Financial Modules Shortcut Section
-            _buildSectionHeader('Financial Tools & Targets'),
-            const SizedBox(height: 10),
-            AppCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  _buildListTile(
-                    icon: Icons.flag_rounded,
-                    title: 'Savings Goals & Sinking Funds',
-                    trailing: 'View Goals',
-                    iconColor: AppTheme.inflowGreen,
-                    onTap: () => context.go('/goals'),
-                  ),
-                  const Divider(height: 1, color: AppTheme.borderSlate),
-                  _buildListTile(
-                    icon: Icons.insights_rounded,
-                    title: 'Budget Health & Burn Rate Forecast',
-                    trailing: 'Analytics',
-                    iconColor: AppTheme.trustBlue,
-                    onTap: () => context.go('/analytics'),
-                  ),
-                ],
-              ),
+            // Settings & Preferences
+            const SectionHeader(title: 'Preferences & Features'),
+            const SizedBox(height: 8),
+
+            ActionCardTile(
+              icon: Icons.currency_exchange_rounded,
+              iconColor: AppTheme.primaryPurple,
+              title: 'Default Currency',
+              subtitle: '${currency.name} (${currency.symbol})',
+              onTap: () => _showCurrencyPicker(context, ref),
+              margin: const EdgeInsets.only(bottom: 10),
             ),
+
+            ActionCardTile(
+              icon: Icons.security_rounded,
+              iconColor: AppTheme.inflowGreen,
+              title: 'Privacy & Security Shield',
+              subtitle: 'Zero-Trust data redaction and local safeguards',
+              onTap: () => PrivacySecuritySheet.show(context),
+              margin: const EdgeInsets.only(bottom: 10),
+            ),
+
+            ActionCardTile(
+              icon: Icons.file_download_outlined,
+              iconColor: AppTheme.primaryPurple,
+              title: 'Export Financial Statements',
+              subtitle: 'Download monthly CSV/Excel statement',
+              onTap: () => ExportStatementSheet.show(context, expenses),
+              margin: const EdgeInsets.only(bottom: 10),
+            ),
+
             const SizedBox(height: 24),
 
-            // Data & Reports Section
-            _buildSectionHeader('Data & Zero-Trust Security'),
-            const SizedBox(height: 10),
-            AppCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  _buildListTile(
-                    icon: Icons.file_download_outlined,
-                    title: 'Export Spending Statement (CSV)',
-                    trailing: 'Download',
-                    iconColor: AppTheme.trustTeal,
-                    onTap: () => ExportStatementSheet.show(context),
-                  ),
-                  const Divider(height: 1, color: AppTheme.borderSlate),
-                  _buildListTile(
-                    icon: Icons.shield_outlined,
-                    title: 'Privacy & Zero-Trust Security Shield',
-                    trailing: 'Active',
-                    iconColor: AppTheme.inflowGreen,
-                    onTap: () => PrivacySecuritySheet.show(context),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
+            // Account & Logout
+            const SectionHeader(title: 'Account'),
+            const SizedBox(height: 8),
 
-            // Preferences Group
-            _buildSectionHeader('App Preferences'),
-            const SizedBox(height: 10),
-            AppCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  _buildListTile(
-                    icon: Icons.currency_exchange_rounded,
-                    title: 'Default Currency',
-                    trailing: '${currency.code} (${currency.symbol})',
-                    iconColor: AppTheme.warningAmber,
-                    onTap: () => _showCurrencyPicker(context, ref),
-                  ),
-                  const Divider(height: 1, color: AppTheme.borderSlate),
-                  _buildListTile(
-                    icon: Icons.notifications_none_rounded,
-                    title: 'Smart Spending Alerts',
-                    trailing: 'Enabled',
-                    iconColor: AppTheme.trustBlue,
-                    onTap: () {},
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Logout Button
-            AppButton(
-              text: 'Log Out',
+            ActionCardTile(
               icon: Icons.logout_rounded,
-              variant: AppButtonVariant.outlined,
-              backgroundColor: AppTheme.outflowCoral,
-              textColor: AppTheme.outflowCoral,
-              onPressed: () async {
-                await ref.read(authProvider.notifier).logout();
-                if (context.mounted) {
-                  context.go('/login');
+              iconColor: AppTheme.outflowCoral,
+              title: 'Log Out',
+              subtitle: 'Securely sign out of this device',
+              onTap: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    title: const Text('Confirm Logout', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+                    content: const Text('Are you sure you want to sign out?', style: TextStyle(color: AppTheme.textSecondary)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.outflowCoral),
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('Log Out', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true) {
+                  await ref.read(authProvider.notifier).logout();
+                  if (context.mounted) {
+                    context.go('/login');
+                  }
                 }
               },
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'AI Finance Assistant • v1.3.0 (Fintech Edition)',
-              style: TextStyle(color: Colors.white24, fontSize: 12),
-            ),
-            const SizedBox(height: 20),
+
+            const SizedBox(height: 40),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        title,
-        style: AppTypography.bodySmall.copyWith(
-          fontWeight: FontWeight.w600,
-          color: AppTheme.textSecondary,
-          letterSpacing: 0.3,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildListTile({
-    required IconData icon,
-    required String title,
-    required String trailing,
-    Color? iconColor,
-    required VoidCallback onTap,
-  }) {
-    final effectiveColor = iconColor ?? AppTheme.trustBlue;
-    return Material(
-      color: Colors.transparent,
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: AppDecorations.iconBadge(effectiveColor, radius: 10),
-          child: Icon(icon, color: effectiveColor, size: 18),
-        ),
-        title: Text(
-          title,
-          style: AppTypography.bodyLarge.copyWith(fontSize: 14.5),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              trailing,
-              style: AppTypography.bodySmall.copyWith(color: Colors.white54),
-            ),
-            const SizedBox(width: 6),
-            const Icon(Icons.chevron_right, color: Colors.white24, size: 18),
-          ],
-        ),
-        onTap: onTap,
       ),
     );
   }
 }
-

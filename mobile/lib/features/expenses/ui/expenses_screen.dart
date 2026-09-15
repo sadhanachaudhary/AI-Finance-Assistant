@@ -51,16 +51,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     final filteredTotal = filteredExpenses.fold(0.0, (sum, e) => sum + e.amount);
 
     return Scaffold(
+      backgroundColor: AppTheme.bgCanvas,
       appBar: AppBar(
-        title: const Text('Expenses & Transactions'),
+        title: const Text('Expenses'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.auto_awesome, color: AppTheme.trustTeal),
+            icon: const Icon(Icons.auto_awesome, color: AppTheme.primaryPurple),
             tooltip: 'Smart Auto-Track',
             onPressed: () => SmartIngestSheet.show(context),
           ),
           IconButton(
-            icon: const Icon(Icons.add_rounded),
+            icon: const Icon(Icons.add_circle_outline_rounded, color: AppTheme.textPrimary),
             tooltip: 'Add Expense',
             onPressed: () => AddExpenseSheet.show(context),
           ),
@@ -69,7 +70,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             alignment: Alignment.center,
             children: [
               IconButton(
-                icon: const Icon(Icons.tune_rounded),
+                icon: const Icon(Icons.tune_rounded, color: AppTheme.textPrimary),
                 tooltip: 'Filter & Sort',
                 onPressed: () => FilterBottomSheet.show(context),
               ),
@@ -80,7 +81,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: const BoxDecoration(
-                      color: AppTheme.trustBlue,
+                      color: AppTheme.primaryPurple,
                       shape: BoxShape.circle,
                     ),
                     constraints: const BoxConstraints(
@@ -101,7 +102,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.refresh_rounded, color: AppTheme.textPrimary),
             tooltip: 'Refresh',
             onPressed: () {
               ref.read(expensesProvider.notifier).refresh();
@@ -112,7 +113,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => AddExpenseSheet.show(context),
-        backgroundColor: AppTheme.trustBlue,
+        backgroundColor: AppTheme.primaryPurple,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: const Text('Add Expense', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
@@ -127,8 +128,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
 
           return RefreshIndicator(
             onRefresh: () => ref.read(expensesProvider.notifier).refresh(),
-            color: AppTheme.trustBlue,
-            backgroundColor: AppTheme.surfaceSlate,
+            color: AppTheme.primaryPurple,
+            backgroundColor: Colors.white,
             child: CustomScrollView(
               slivers: [
                 // Top Search & Summary Header
@@ -159,17 +160,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                 child: ChoiceChip(
                                   label: Text(preset.label),
                                   selected: isSelected,
-                                  selectedColor: AppTheme.trustBlue,
-                                  backgroundColor: AppTheme.surfaceSlate,
+                                  selectedColor: AppTheme.primaryPurple,
+                                  backgroundColor: Colors.white,
                                   labelStyle: TextStyle(
-                                    color: isSelected ? Colors.white : Colors.white70,
+                                    color: isSelected ? Colors.white : AppTheme.textSecondary,
                                     fontSize: 12,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                                   ),
                                   side: BorderSide(
-                                    color: isSelected ? AppTheme.trustBlue : AppTheme.borderSlate,
+                                    color: isSelected ? AppTheme.primaryPurple : AppTheme.borderLight,
                                   ),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   onSelected: (selected) {
                                     if (selected) {
                                       if (preset == DateFilterPreset.custom) {
@@ -228,8 +229,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                   '${filteredExpenses.length} ${filteredExpenses.length == 1 ? 'Transaction' : 'Transactions'}',
                                   style: const TextStyle(
                                     fontSize: 13,
-                                    color: Colors.white54,
-                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.textSecondary,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 if (activeFiltersCount > 0 || _searchController.text.isNotEmpty) ...[
@@ -241,7 +242,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: AppTheme.outflowCoral,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w700,
                                         decoration: TextDecoration.underline,
                                       ),
                                     ),
@@ -252,9 +253,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                             Text(
                               'Total: ${Formatters.formatCurrency(filteredTotal)}',
                               style: AppTheme.tabularNumbers(
-                                fontSize: 14,
-                                color: AppTheme.inflowGreen,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 14.5,
+                                color: AppTheme.textPrimary,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ],
@@ -294,7 +295,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                         (context, index) {
                           final expense = filteredExpenses[index];
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.only(bottom: 10),
                             child: TransactionTile(
                               id: expense.id,
                               title: expense.merchant ?? 'Expense',

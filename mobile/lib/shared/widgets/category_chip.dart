@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 
 class CategoryChip extends StatelessWidget {
   final String label;
@@ -18,7 +19,7 @@ class CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = color ?? const Color(0xFF6C63FF);
+    final effectiveColor = color ?? AppTheme.primaryPurple;
 
     return FilterChip(
       label: Row(
@@ -27,32 +28,32 @@ class CategoryChip extends StatelessWidget {
           if (icon != null) ...[
             Icon(
               icon,
-              size: 16,
-              color: isSelected ? Colors.white : Colors.white70,
+              size: 15,
+              color: isSelected ? Colors.white : AppTheme.textSecondary,
             ),
             const SizedBox(width: 6),
           ],
           Text(
             label,
             style: TextStyle(
-              fontSize: 13,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected ? Colors.white : Colors.white70,
+              fontSize: 12.5,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? Colors.white : AppTheme.textPrimary,
             ),
           ),
         ],
       ),
       selected: isSelected,
       onSelected: onSelected,
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: Colors.white,
       selectedColor: effectiveColor,
       checkmarkColor: Colors.white,
       showCheckmark: false,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         side: BorderSide(
-          color: isSelected ? effectiveColor : const Color(0xFF2C2C2C),
+          color: isSelected ? effectiveColor : AppTheme.borderLight,
           width: 1.2,
         ),
       ),

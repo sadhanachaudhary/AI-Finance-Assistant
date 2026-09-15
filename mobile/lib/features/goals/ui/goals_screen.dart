@@ -23,16 +23,23 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          backgroundColor: AppTheme.surfaceElevated,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Row(
             children: [
-              Icon(goal.parsedIcon, color: goal.parsedColor, size: 24),
-              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: goal.parsedColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(goal.parsedIcon, color: goal.parsedColor, size: 22),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Add to "${goal.name}"',
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: AppTheme.textPrimary, fontSize: 17, fontWeight: FontWeight.w800),
                 ),
               ),
             ],
@@ -43,20 +50,18 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
             children: [
               const Text(
                 'Enter deposit amount to contribute to this goal:',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
               ),
               const SizedBox(height: 14),
               TextField(
                 controller: controller,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 autofocus: true,
-                style: AppTheme.tabularNumbers(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                style: AppTheme.tabularNumbers(color: AppTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
                 decoration: const InputDecoration(
                   labelText: 'Deposit Amount (₹)',
-                  labelStyle: TextStyle(color: Colors.white70),
+                  labelStyle: TextStyle(color: AppTheme.textSecondary),
                   prefixIcon: Icon(Icons.currency_rupee, color: AppTheme.inflowGreen),
-                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.inflowGreen)),
                 ),
               ),
             ],
@@ -64,13 +69,13 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+              child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.inflowGreen,
+                backgroundColor: AppTheme.primaryPurple,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               onPressed: () {
                 final depositVal = double.tryParse(controller.text.trim());
@@ -79,7 +84,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      backgroundColor: AppTheme.inflowGreen,
+                      backgroundColor: AppTheme.primaryPurple,
                       content: Text('🎉 Added ${Formatters.formatCurrency(depositVal)} to "${goal.name}"!'),
                     ),
                   );
@@ -97,17 +102,17 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surfaceElevated,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Savings Goal?', style: TextStyle(color: Colors.white, fontSize: 16)),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Delete Savings Goal?', style: TextStyle(color: AppTheme.textPrimary, fontSize: 17, fontWeight: FontWeight.w800)),
         content: Text(
           'Are you sure you want to remove "${goal.name}"? Your saved balance record will be removed.',
-          style: const TextStyle(color: Colors.white70, fontSize: 13),
+          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -133,11 +138,12 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
     final overallPercentage = totalTarget > 0 ? (totalSaved / totalTarget).clamp(0.0, 1.0) : 0.0;
 
     return Scaffold(
+      backgroundColor: AppTheme.bgCanvas,
       appBar: AppBar(
-        title: const Text('Savings Goals & Targets'),
+        title: const Text('Savings Goals'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, color: AppTheme.inflowGreen, size: 26),
+            icon: const Icon(Icons.add_circle_outline_rounded, color: AppTheme.primaryPurple, size: 26),
             onPressed: () => AddGoalSheet.show(context),
           ),
         ],
@@ -151,17 +157,17 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
         data: (goals) {
           return RefreshIndicator(
             onRefresh: () async => ref.read(goalsProvider.notifier).refresh(),
-            color: AppTheme.inflowGreen,
-            backgroundColor: AppTheme.surfaceSlate,
+            color: AppTheme.primaryPurple,
+            backgroundColor: Colors.white,
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Hero Overall Savings Summary
-                  GlassCard(
+                  AppCard(
                     padding: const EdgeInsets.all(22),
-                    gradientColors: const [Color(0xFF1E293B), Color(0xFF0F172A)],
+                    borderRadius: 24,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -173,13 +179,16 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                               style: AppTypography.bodySmall.copyWith(color: AppTheme.textSecondary),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: AppDecorations.pillBadge(AppTheme.inflowGreen, radius: 10),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppTheme.softPurpleBadge,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               child: Text(
                                 '${(overallPercentage * 100).toStringAsFixed(0)}% Overall',
                                 style: AppTheme.tabularNumbers(
-                                  color: AppTheme.inflowGreen,
-                                  fontSize: 11,
+                                  color: AppTheme.primaryPurple,
+                                  fontSize: 11.5,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -192,23 +201,23 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                           style: AppTheme.tabularNumbers(
                             color: AppTheme.textPrimary,
                             fontSize: 32,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
                             letterSpacing: -0.5,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'of ${Formatters.formatCurrency(totalTarget)} total target',
-                          style: AppTypography.bodySmall,
+                          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 16),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(6),
                           child: LinearProgressIndicator(
                             value: overallPercentage,
                             minHeight: 8,
-                            backgroundColor: Colors.white10,
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.inflowGreen),
+                            backgroundColor: AppTheme.surfaceElevated,
+                            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryPurple),
                           ),
                         ),
                       ],
@@ -225,8 +234,8 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                         style: AppTypography.h2,
                       ),
                       TextButton.icon(
-                        icon: const Icon(Icons.add, size: 18, color: AppTheme.trustBlue),
-                        label: const Text('New Goal', style: TextStyle(color: AppTheme.trustBlue, fontWeight: FontWeight.bold, fontSize: 13.5)),
+                        icon: const Icon(Icons.add, size: 18, color: AppTheme.primaryPurple),
+                        label: const Text('New Goal', style: TextStyle(color: AppTheme.primaryPurple, fontWeight: FontWeight.bold, fontSize: 13.5)),
                         onPressed: () => AddGoalSheet.show(context),
                       ),
                     ],
@@ -246,13 +255,13 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: goals.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 14),
+                      separatorBuilder: (context, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final goal = goals[index];
                         final isFinished = goal.isCompleted;
 
                         return AppCard(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(18),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -262,7 +271,10 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                                   Container(
                                     width: 48,
                                     height: 48,
-                                    decoration: AppDecorations.iconBadge(goal.parsedColor, radius: 14),
+                                    decoration: BoxDecoration(
+                                      color: goal.parsedColor.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
                                     child: Icon(goal.parsedIcon, color: goal.parsedColor, size: 24),
                                   ),
                                   const SizedBox(width: 14),
@@ -277,13 +289,20 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                                                 goal.name,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: AppTypography.h3,
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: AppTheme.textPrimary,
+                                                ),
                                               ),
                                             ),
                                             if (isFinished)
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                                decoration: AppDecorations.pillBadge(AppTheme.inflowGreen, radius: 10),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.softGreenBadge,
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
                                                 child: const Text(
                                                   '🏆 Reached',
                                                   style: TextStyle(color: AppTheme.inflowGreen, fontSize: 10.5, fontWeight: FontWeight.bold),
@@ -297,26 +316,26 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                                             if (goal.category != null) ...[
                                               Text(
                                                 goal.category!,
-                                                style: TextStyle(color: goal.parsedColor, fontSize: 12, fontWeight: FontWeight.w500),
+                                                style: TextStyle(color: goal.parsedColor, fontSize: 12, fontWeight: FontWeight.w600),
                                               ),
-                                              const Text(' • ', style: TextStyle(color: Colors.white38)),
+                                              const Text(' • ', style: TextStyle(color: AppTheme.textTertiary)),
                                             ],
                                             if (goal.daysRemaining != null)
                                               Text(
                                                 '${goal.daysRemaining} days left',
-                                                style: const TextStyle(color: Colors.white38, fontSize: 12),
+                                                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                                               )
                                             else
-                                              const Text('Ongoing goal', style: TextStyle(color: Colors.white38, fontSize: 12)),
+                                              const Text('Ongoing goal', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                                           ],
                                         ),
                                       ],
                                     ),
                                   ),
                                   PopupMenuButton<String>(
-                                    icon: const Icon(Icons.more_vert_rounded, color: Colors.white38, size: 20),
-                                    color: AppTheme.surfaceElevated,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                    icon: const Icon(Icons.more_vert_rounded, color: AppTheme.textTertiary, size: 20),
+                                    color: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                     onSelected: (val) {
                                       if (val == 'deposit') _showDepositDialog(goal);
                                       if (val == 'delete') _confirmDeleteGoal(goal);
@@ -326,9 +345,9 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                                         value: 'deposit',
                                         child: Row(
                                           children: [
-                                            Icon(Icons.add_circle_outline, color: AppTheme.inflowGreen, size: 18),
+                                            Icon(Icons.add_circle_outline, color: AppTheme.primaryPurple, size: 18),
                                             SizedBox(width: 8),
-                                            Text('Add Deposit', style: TextStyle(color: Colors.white)),
+                                            Text('Add Deposit', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
                                           ],
                                         ),
                                       ),
@@ -338,7 +357,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                                           children: [
                                             Icon(Icons.delete_outline, color: AppTheme.outflowCoral, size: 18),
                                             SizedBox(width: 8),
-                                            Text('Delete Goal', style: TextStyle(color: AppTheme.outflowCoral)),
+                                            Text('Delete Goal', style: TextStyle(color: AppTheme.outflowCoral, fontWeight: FontWeight.w600)),
                                           ],
                                         ),
                                       ),
@@ -355,15 +374,15 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                                   Text(
                                     Formatters.formatCurrency(goal.currentAmount, currency: goal.currency),
                                     style: AppTheme.tabularNumbers(
-                                      color: Colors.white,
+                                      color: AppTheme.textPrimary,
                                       fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w800,
                                     ),
                                   ),
                                   Text(
                                     'Target: ${Formatters.formatCurrency(goal.targetAmount, currency: goal.currency)}',
                                     style: AppTheme.tabularNumbers(
-                                      color: Colors.white54,
+                                      color: AppTheme.textSecondary,
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -378,7 +397,7 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                                 child: LinearProgressIndicator(
                                   value: goal.percentage,
                                   minHeight: 7,
-                                  backgroundColor: Colors.white10,
+                                  backgroundColor: AppTheme.surfaceElevated,
                                   valueColor: AlwaysStoppedAnimation<Color>(goal.parsedColor),
                                 ),
                               ),
@@ -390,17 +409,16 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                                 children: [
                                   Text(
                                     '${(goal.percentage * 100).toStringAsFixed(0)}% Saved (${Formatters.formatCurrency(goal.remainingAmount, currency: goal.currency)} to go)',
-                                    style: AppTheme.tabularNumbers(color: Colors.white54, fontSize: 11.5),
+                                    style: AppTheme.tabularNumbers(color: AppTheme.textSecondary, fontSize: 11.5),
                                   ),
                                   InkWell(
                                     onTap: () => _showDepositDialog(goal),
                                     borderRadius: BorderRadius.circular(12),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                       decoration: BoxDecoration(
-                                        color: goal.parsedColor.withValues(alpha: 0.15),
+                                        color: goal.parsedColor.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: goal.parsedColor.withValues(alpha: 0.3)),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,

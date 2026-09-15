@@ -53,9 +53,9 @@ class _AppTextFieldState extends State<AppTextField> {
           Text(
             widget.labelText!,
             style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.white70,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -73,18 +73,18 @@ class _AppTextFieldState extends State<AppTextField> {
           maxLines: widget.maxLines,
           autofocus: widget.autofocus,
           style: const TextStyle(
-            fontSize: 16,
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
+            fontSize: 15,
+            color: AppTheme.textPrimary,
+            fontWeight: FontWeight.w600,
           ),
           decoration: InputDecoration(
             hintText: widget.hintText,
             hintStyle: const TextStyle(
-              color: Colors.white38,
-              fontSize: 15,
+              color: AppTheme.textTertiary,
+              fontSize: 14.5,
             ),
             filled: true,
-            fillColor: AppTheme.surfaceSlate,
+            fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 18,
               vertical: 16,
@@ -92,7 +92,7 @@ class _AppTextFieldState extends State<AppTextField> {
             prefixIcon: widget.prefixIcon != null
                 ? Icon(
                     widget.prefixIcon,
-                    color: Colors.white54,
+                    color: AppTheme.textSecondary,
                     size: 22,
                   )
                 : null,
@@ -100,7 +100,7 @@ class _AppTextFieldState extends State<AppTextField> {
                 ? IconButton(
                     icon: Icon(
                       _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      color: Colors.white54,
+                      color: AppTheme.textSecondary,
                       size: 22,
                     ),
                     onPressed: () {
@@ -111,23 +111,23 @@ class _AppTextFieldState extends State<AppTextField> {
                   )
                 : widget.suffix,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppTheme.borderSlate, width: 1),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppTheme.borderLight, width: 1.2),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppTheme.borderSlate, width: 1),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppTheme.borderLight, width: 1.2),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppTheme.trustBlue, width: 1.8),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppTheme.primaryPurple, width: 1.8),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: AppTheme.outflowCoral, width: 1.5),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: AppTheme.outflowCoral, width: 2),
             ),
           ),

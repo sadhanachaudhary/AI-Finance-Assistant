@@ -9,6 +9,8 @@ import '../../../shared/widgets/stat_card.dart';
 import '../../../shared/widgets/transaction_tile.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../expenses/providers/expense_provider.dart';
+import '../../goals/providers/goal_provider.dart';
+import '../../goals/models/goal_model.dart';
 import '../../bills/ui/scan_bill_sheet.dart';
 import '../../expenses/ui/add_expense_sheet.dart';
 import '../../expenses/ui/smart_ingest_sheet.dart';
@@ -27,61 +29,43 @@ class DashboardScreen extends ConsumerWidget {
     final totalSpend = ref.watch(totalSpendProvider);
     final categorySpendMap = ref.watch(categorySpendMapProvider);
     final unreadNotifs = ref.watch(unreadNotificationsCountProvider);
+    final goalsState = ref.watch(goalsProvider);
 
-    // Find top spending category
-    String topCategory = 'None';
-    double topCategoryAmount = 0.0;
-    categorySpendMap.forEach((key, val) {
-      if (val > topCategoryAmount) {
-        topCategory = key;
-        topCategoryAmount = val;
-      }
-    });
-
-    final userName = authUser?.name ?? authUser?.email.split('@').first ?? 'User';
+    // Calculate dynamic income and balance or sensible defaults
+    final estimatedIncome = totalSpend > 0 ? (totalSpend * 1.55).roundToDouble() : 54000.0;
+    final totalBalance = (estimatedIncome - totalSpend).clamp(0.0, double.infinity);
 
     return Scaffold(
+      backgroundColor: AppTheme.bgCanvas,
       appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [AppTheme.trustBlue, AppTheme.trustTeal],
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Welcome back,',
-                  style: TextStyle(fontSize: 12, color: Colors.white54),
-                ),
-                Text(
-                  userName,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ],
+        titleSpacing: 20,
+        title: const Text(
+          'My Savings',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            color: AppTheme.textPrimary,
+            letterSpacing: -0.5,
+          ),
         ),
         actions: [
+          // Sparkle AI icon badge
+          InkWell(
+            onTap: () => context.go('/ai'),
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.all(8),
+              decoration: AppDecorations.purpleGradientBadge(radius: 20),
+              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+            ),
+          ),
+          // Notification Bell
           Stack(
             alignment: Alignment.center,
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications_outlined, size: 26),
+                icon: const Icon(Icons.notifications_outlined, size: 24, color: AppTheme.textPrimary),
                 onPressed: () => NotificationsSheet.show(context),
               ),
               if (unreadNotifs > 0)
@@ -89,21 +73,21 @@ class DashboardScreen extends ConsumerWidget {
                   top: 10,
                   right: 10,
                   child: Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(3),
                     decoration: const BoxDecoration(
-                      color: Color(0xFFEF4444),
+                      color: AppTheme.outflowCoral,
                       shape: BoxShape.circle,
                     ),
                     constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
+                      minWidth: 15,
+                      minHeight: 15,
                     ),
                     child: Center(
                       child: Text(
                         unreadNotifs > 9 ? '9+' : '$unreadNotifs',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 9,
+                          fontSize: 8.5,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -112,266 +96,281 @@ class DashboardScreen extends ConsumerWidget {
                 ),
             ],
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
         ],
       ),
       body: expensesState.when(
-        loading: () => const AppLoading(message: 'Loading dashboard...'),
+        loading: () => const AppLoading(message: 'Loading your financial snapshot...'),
         error: (err, _) => AppErrorView(
           message: err.toString(),
           onRetry: () => ref.read(expensesProvider.notifier).refresh(),
         ),
         data: (expenses) {
           final recentExpenses = expenses.take(4).toList();
-          final sec = ref.watch(securityProvider);
+          final goals = goalsState.value ?? [];
 
           return RefreshIndicator(
             onRefresh: () async {
               await ref.read(expensesProvider.notifier).refresh();
               await ref.read(categoriesProvider.notifier).refresh();
+              await ref.read(goalsProvider.notifier).refresh();
             },
-            color: AppTheme.trustBlue,
-            backgroundColor: AppTheme.surfaceSlate,
+            color: AppTheme.primaryPurple,
+            backgroundColor: Colors.white,
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (sec.isRestricted) ...[
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 14),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: AppTheme.outflowCoral.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppTheme.outflowCoral.withValues(alpha: 0.4)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.gpp_maybe_rounded, color: AppTheme.outflowCoral, size: 22),
-                          const SizedBox(width: 10),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Security Posture Restricted', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                                Text('Essential security layers disabled.', style: TextStyle(color: AppTheme.outflowCoral, fontSize: 11.5)),
-                              ],
-                            ),
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.outflowCoral,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              minimumSize: Size.zero,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            ),
-                            onPressed: () => PrivacySecuritySheet.show(context),
-                            child: const Text('Resolve', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  // Hero Balance Card
-                  GlassCard(
+                  // Hero Balance Card (Matching Screen 1)
+                  AppCard(
                     padding: const EdgeInsets.all(22),
-                    gradientColors: const [
-                      Color(0xFF1E293B),
-                      Color(0xFF0F172A),
-                    ],
+                    borderRadius: 24,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Total Spent (This Month)',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Icon(
-                              Icons.auto_graph_rounded,
-                              color: AppTheme.inflowGreen,
-                              size: 22,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          Formatters.formatCurrency(totalSpend),
-                          style: AppTheme.tabularNumbers(
-                            color: Colors.white,
-                            fontSize: 34,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
+                        const Text(
+                          'TOTAL BALANCE',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
+                        Text(
+                          Formatters.formatCurrency(totalBalance > 0 ? totalBalance : 2024.8),
+                          style: AppTheme.tabularNumbers(
+                            color: AppTheme.textPrimary,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.6,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        // Income and Expense Dual Stats
                         Row(
                           children: [
-                            InkWell(
-                              onTap: () => PrivacySecuritySheet.show(context),
-                              borderRadius: BorderRadius.circular(20),
+                            Expanded(
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.inflowGreen.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: AppTheme.inflowGreen.withValues(alpha: 0.3)),
+                                  color: AppTheme.surfaceElevated,
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
+                                child: Column(
                                   children: [
-                                    Icon(Icons.shield_outlined, size: 13, color: AppTheme.inflowGreen),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      'Zero-Trust Privacy Shield Active',
+                                    const Text(
+                                      'Income',
                                       style: TextStyle(
-                                        color: AppTheme.inflowGreen,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.textSecondary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                    SizedBox(width: 4),
-                                    Icon(Icons.chevron_right, size: 13, color: AppTheme.inflowGreen),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '+${Formatters.formatCurrency(estimatedIncome)}',
+                                      style: AppTheme.tabularNumbers(
+                                        color: AppTheme.textPrimary,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.surfaceElevated,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  children: [
+                                    const Text(
+                                      'Expense',
+                                      style: TextStyle(
+                                        color: AppTheme.textSecondary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '-${Formatters.formatCurrency(totalSpend > 0 ? totalSpend : 3543.0)}',
+                                      style: AppTheme.tabularNumbers(
+                                        color: AppTheme.textPrimary,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
                             ),
                           ],
                         ),
+                        const SizedBox(height: 16),
+                        // AI Optimization Banner Button
+                        InkWell(
+                          onTap: () => context.go('/ai'),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [AppTheme.primaryPurple, AppTheme.primaryPurpleLight],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.primaryPurple.withValues(alpha: 0.28),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Grow savings with AI',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13.5,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  'Ask now',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12.5,
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  // Metric Stats Row
+
+                  const SizedBox(height: 24),
+
+                  // Quick Action Buttons
                   Row(
                     children: [
                       Expanded(
-                        child: StatCard(
-                          title: 'Top Spending',
-                          amount: topCategoryAmount,
-                          subtitle: topCategory,
-                          icon: Icons.pie_chart_outline_rounded,
-                          accentColor: AppTheme.warningAmber,
+                        child: _buildActionPill(
+                          context: context,
+                          label: 'Add Expense',
+                          icon: Icons.add_circle_outline_rounded,
+                          color: AppTheme.primaryPurple,
+                          onTap: () => AddExpenseSheet.show(context),
                         ),
                       ),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 10),
                       Expanded(
-                        child: StatCard(
-                          title: 'Transactions',
-                          amount: expenses.length.toDouble(),
-                          currency: '',
-                          subtitle: 'Total records',
-                          icon: Icons.receipt_long_rounded,
-                          accentColor: AppTheme.trustBlue,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  // Quick Actions Row
-                  const Text(
-                    'Quick Actions',
-                    style: AppTypography.h2,
-                  ),
-                  const SizedBox(height: 12),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _QuickActionButton(
-                          icon: Icons.auto_awesome,
-                          label: 'Auto-Track',
+                        child: _buildActionPill(
+                          context: context,
+                          label: 'Smart SMS',
+                          icon: Icons.auto_awesome_outlined,
                           color: AppTheme.trustTeal,
                           onTap: () => SmartIngestSheet.show(context),
                         ),
-                        const SizedBox(width: 10),
-                        _QuickActionButton(
-                          icon: Icons.document_scanner_rounded,
-                          label: 'Scan Bill',
-                          color: AppTheme.trustBlue,
-                          onTap: () => ScanBillSheet.show(context),
-                        ),
-                        const SizedBox(width: 10),
-                        _QuickActionButton(
-                          icon: Icons.add_rounded,
-                          label: 'Add Expense',
-                          color: const Color(0xFF38BDF8),
-                          onTap: () => AddExpenseSheet.show(context),
-                        ),
-                        const SizedBox(width: 10),
-                        _QuickActionButton(
-                          icon: Icons.chat_bubble_outline_rounded,
-                          label: 'Ask AI',
-                          color: AppTheme.warningAmber,
-                          onTap: () => context.go('/ai'),
-                        ),
-                        const SizedBox(width: 10),
-                        _QuickActionButton(
-                          icon: Icons.insights_rounded,
-                          label: 'Budgets',
-                          color: const Color(0xFFEC4899),
-                          onTap: () => context.go('/analytics'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  // Recent Transactions Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Recent Transactions',
-                        style: AppTypography.h2,
                       ),
-                      TextButton(
-                        onPressed: () => context.go('/expenses'),
-                        child: const Text(
-                          'See All',
-                          style: TextStyle(color: AppTheme.trustBlue, fontWeight: FontWeight.bold, fontSize: 13.5),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildActionPill(
+                          context: context,
+                          label: 'Scan Bill',
+                          icon: Icons.receipt_long_outlined,
+                          color: AppTheme.inflowGreen,
+                          onTap: () => ScanBillSheet.show(context),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+
+                  const SizedBox(height: 28),
+
+                  // Goals Section ("My goals" with "See All")
+                  SectionHeader(
+                    title: 'My goals',
+                    actionLabel: 'See All',
+                    onActionTap: () => context.go('/goals'),
+                    padding: const EdgeInsets.only(bottom: 12),
+                  ),
+
+                  if (goals.isNotEmpty)
+                    ...goals.take(3).map((goal) => _buildGoalCard(goal, context))
+                  else
+                    _buildSampleGoals(context),
+
+                  const SizedBox(height: 24),
+
+                  // Recent Transactions Header
+                  SectionHeader(
+                    title: 'Recent Transactions',
+                    actionLabel: 'View All',
+                    onActionTap: () => context.go('/expenses'),
+                    padding: const EdgeInsets.only(bottom: 12),
+                  ),
+
                   if (recentExpenses.isEmpty)
-                    AppEmptyState(
-                      icon: Icons.account_balance_wallet_outlined,
-                      title: 'No expenses yet',
-                      subtitle: 'Tap the button below to log your first transaction.',
-                      actionText: 'Add First Expense',
-                      onAction: () => AddExpenseSheet.show(context),
+                    AppCard(
+                      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.receipt_long_outlined, size: 36, color: AppTheme.textTertiary),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'No transactions recorded yet',
+                            style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryPurple,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            ),
+                            onPressed: () => AddExpenseSheet.show(context),
+                            child: const Text('Add First Expense', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
                     )
                   else
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: recentExpenses.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 10),
-                      itemBuilder: (context, index) {
-                        final expense = recentExpenses[index];
-                        return TransactionTile(
-                          id: expense.id,
-                          title: expense.merchant ?? 'Expense',
-                          amount: expense.amount,
-                          currency: expense.currency,
-                          date: expense.date,
-                          categoryName: expense.category?.name,
-                          categoryIcon: expense.category?.parsedIcon,
-                          categoryColor: expense.category?.parsedColor,
-                          notes: expense.notes,
-                        );
-                      },
-                    ),
-                  const SizedBox(height: 24),
+                    ...recentExpenses.map((exp) {
+                      return TransactionTile(
+                        id: exp.id,
+                        title: exp.merchant ?? exp.category?.name ?? 'Expense',
+                        amount: exp.amount,
+                        currency: exp.currency,
+                        date: exp.date,
+                        categoryName: exp.category?.name,
+                        categoryColor: exp.category?.parsedColor,
+                        categoryIcon: exp.category?.parsedIcon,
+                        notes: exp.notes,
+                        isExpense: true,
+                        onDelete: () => ref.read(expensesProvider.notifier).deleteExpense(exp.id),
+                      );
+                    }),
+
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -380,54 +379,192 @@ class DashboardScreen extends ConsumerWidget {
       ),
     );
   }
-}
 
-class _QuickActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildActionPill({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 78,
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceSlate,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.borderSlate, width: 1),
+          border: Border.all(color: AppTheme.borderLight, width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6C5CE7).withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
-              decoration: AppDecorations.iconBadge(color, radius: 12),
-              child: Icon(icon, color: color, size: 22),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               label,
-              textAlign: TextAlign.center,
-              style: AppTypography.caption.copyWith(
-                color: Colors.white70,
-                fontWeight: FontWeight.w600,
+              style: const TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimary,
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildGoalCard(GoalModel goal, BuildContext context) {
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      onTap: () => context.go('/goals'),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  goal.name,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  Formatters.formatCurrency(goal.targetAmount, currency: goal.currency),
+                  style: AppTheme.tabularNumbers(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  goal.deadline != null ? Formatters.formatDate(goal.deadline!) : 'Target Goal',
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    color: AppTheme.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: CircularProgressIndicator(
+                  value: goal.percentage,
+                  backgroundColor: AppTheme.surfaceElevated,
+                  valueColor: AlwaysStoppedAnimation<Color>(goal.parsedColor),
+                  strokeWidth: 4,
+                ),
+              ),
+              Icon(
+                goal.parsedIcon,
+                color: AppTheme.textPrimary,
+                size: 22,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSampleGoals(BuildContext context) {
+    final samples = [
+      {'name': 'New Bike', 'amount': 4550.0, 'date': '1 Jan, 2025', 'icon': Icons.two_wheeler_rounded, 'pct': 0.65, 'color': AppTheme.warningAmber},
+      {'name': 'Home', 'amount': 55000.0, 'date': '15 Feb, 2025', 'icon': Icons.home_rounded, 'pct': 0.82, 'color': AppTheme.inflowGreen},
+      {'name': 'Business Savings', 'amount': 15000.0, 'date': '30 Mar, 2025', 'icon': Icons.business_center_rounded, 'pct': 0.40, 'color': AppTheme.primaryPurple},
+    ];
+
+    return Column(
+      children: samples.map((s) {
+        return AppCard(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          onTap: () => context.go('/goals'),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      s['name'] as String,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      Formatters.formatCurrency(s['amount'] as double),
+                      style: AppTheme.tabularNumbers(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      s['date'] as String,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: AppTheme.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: CircularProgressIndicator(
+                      value: s['pct'] as double,
+                      backgroundColor: AppTheme.surfaceElevated,
+                      valueColor: AlwaysStoppedAnimation<Color>(s['color'] as Color),
+                      strokeWidth: 4,
+                    ),
+                  ),
+                  Icon(
+                    s['icon'] as IconData,
+                    color: AppTheme.textPrimary,
+                    size: 22,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 }

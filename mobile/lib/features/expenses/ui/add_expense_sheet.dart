@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/utils/formatters.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -49,11 +50,11 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF6C63FF),
+            colorScheme: const ColorScheme.light(
+              primary: AppTheme.primaryPurple,
               onPrimary: Colors.white,
-              surface: Color(0xFF1E1E1E),
-              onSurface: Colors.white,
+              surface: Colors.white,
+              onSurface: AppTheme.textPrimary,
             ),
           ),
           child: child!,
@@ -94,8 +95,8 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Expense added successfully!'),
-            backgroundColor: Color(0xFF03DAC6),
+            content: Text('🎉 Expense recorded successfully!'),
+            backgroundColor: AppTheme.primaryPurple,
           ),
         );
       }
@@ -103,217 +104,179 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error adding expense: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            content: Text('Failed to add expense: $e'),
+            backgroundColor: AppTheme.outflowCoral,
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final categories = ref.watch(categoriesProvider).value ?? [];
+    final categoriesState = ref.watch(categoriesProvider);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 16,
-        bottom: bottomInset > 0 ? bottomInset + 16 : 24,
-      ),
+      margin: EdgeInsets.only(bottom: bottomInset),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: const BoxDecoration(
-        color: Color(0xFF181818),
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(top: BorderSide(color: Color(0xFF2C2C2C), width: 1.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x18000000),
+            blurRadius: 24,
+            offset: Offset(0, -4),
+          ),
+        ],
       ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Drag Handle
               Center(
                 child: Container(
-                  width: 40,
+                  width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: AppTheme.borderLight,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
+              const SizedBox(height: 18),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-                      ),
-                      child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                    tooltip: 'Back',
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Add New Expense',
-                      style: TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                  const Text(
+                    'Add Expense',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                   IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    icon: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
-                    ),
                     onPressed: () => Navigator.pop(context),
-                    tooltip: 'Close',
+                    icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              // Amount Input Field
+              const SizedBox(height: 16),
               AppTextField(
                 controller: _amountController,
                 labelText: 'Amount (₹)',
                 hintText: '0.00',
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                prefixIcon: Icons.currency_rupee,
+                prefixIcon: Icons.currency_rupee_rounded,
                 autofocus: true,
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Enter amount';
-                  final num = double.tryParse(v.trim());
-                  if (num == null || num <= 0) return 'Enter a valid amount';
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) return 'Enter amount';
+                  final n = double.tryParse(val.trim());
+                  if (n == null || n <= 0) return 'Enter a valid positive amount';
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              // Merchant / Title
               AppTextField(
                 controller: _merchantController,
                 labelText: 'Merchant / Description',
-                hintText: 'e.g. Starbucks, Amazon, Rent',
+                hintText: 'e.g., Starbucks, Amazon, Groceries',
                 prefixIcon: Icons.storefront_outlined,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter merchant or title' : null,
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) return 'Enter merchant name';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
-              // Category Selection
+              // Category selector
               const Text(
                 'Category',
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white70,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                height: 40,
-                child: categories.isEmpty
-                    ? const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text('No categories available', style: TextStyle(color: Colors.white38, fontSize: 13)),
-                      )
-                    : ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: categories.length,
-                        separatorBuilder: (context, index) => const SizedBox(width: 8),
-                        itemBuilder: (context, index) {
-                          final cat = categories[index];
-                          final isSelected = _selectedCategoryId == cat.id;
-                          return CategoryChip(
-                            label: cat.name,
-                            icon: cat.parsedIcon,
-                            color: cat.parsedColor,
-                            isSelected: isSelected,
-                            onSelected: (selected) {
-                              setState(() {
-                                _selectedCategoryId = selected ? cat.id : null;
-                              });
-                            },
-                          );
-                        },
-                      ),
+              categoriesState.when(
+                loading: () => const LinearProgressIndicator(color: AppTheme.primaryPurple),
+                error: (e, _) => Text('Failed to load categories', style: TextStyle(color: AppTheme.outflowCoral, fontSize: 12)),
+                data: (categories) => SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: categories.map((cat) {
+                      final isSelected = _selectedCategoryId == cat.id;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: CategoryChip(
+                          label: cat.name,
+                          icon: cat.parsedIcon,
+                          color: cat.parsedColor,
+                          isSelected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedCategoryId = selected ? cat.id : null;
+                            });
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
-              // Date Picker Field
-              const Text(
-                'Date',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white70,
-                ),
-              ),
-              const SizedBox(height: 8),
+              // Date picker field
               InkWell(
                 onTap: _pickDate,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E1E),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFF2C2C2C), width: 1),
+                    color: AppTheme.surfaceElevated,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.borderLight),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today_outlined, color: Colors.white54, size: 20),
+                      const Icon(Icons.calendar_today_rounded, size: 20, color: AppTheme.primaryPurple),
                       const SizedBox(width: 12),
                       Text(
                         Formatters.formatDate(_selectedDate),
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
                         ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.chevron_right, color: Colors.white38),
+                      const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.textSecondary),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              // Optional Notes
               AppTextField(
                 controller: _notesController,
                 labelText: 'Notes (Optional)',
-                hintText: 'Additional details...',
-                prefixIcon: Icons.notes_outlined,
+                hintText: 'Additional details or memo...',
+                prefixIcon: Icons.notes_rounded,
                 maxLines: 2,
               ),
               const SizedBox(height: 24),
-              // Submit Button
               AppButton(
                 text: 'Save Expense',
-                icon: Icons.check_circle_outline,
-                isLoading: _isLoading,
                 onPressed: _submit,
+                isLoading: _isLoading,
+                icon: Icons.check_circle_rounded,
               ),
+              const SizedBox(height: 10),
             ],
           ),
         ),

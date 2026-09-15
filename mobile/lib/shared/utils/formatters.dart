@@ -65,6 +65,27 @@ class Formatters {
     return days[date.weekday - 1];
   }
 
+  /// Formats a short calendar date (e.g. "Today", "Yesterday", "13 Sep")
+  static String formatShortDate(DateTime date) {
+    final now = DateTime.now();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    if (now.year == date.year && now.month == date.month && now.day == date.day) {
+      return 'Today';
+    }
+
+    final yesterday = now.subtract(const Duration(days: 1));
+    if (yesterday.year == date.year && yesterday.month == date.month && yesterday.day == date.day) {
+      return 'Yesterday';
+    }
+
+    if (now.year == date.year) {
+      return '${date.day} ${months[date.month - 1]}';
+    }
+
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
   /// Formats a DateTime with day, date and exact time (e.g. "Today • 2:30 PM", "13 Sep • 11:15 AM")
   static String formatDate(DateTime date) {
     final now = DateTime.now();

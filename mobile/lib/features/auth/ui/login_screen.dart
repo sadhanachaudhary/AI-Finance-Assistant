@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -58,7 +59,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    // Listen for state changes to navigate or show errors
     ref.listen(authProvider, (previous, next) {
       if (next is AsyncData && next.value != null) {
         context.go('/dashboard');
@@ -66,13 +66,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error.toString()),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            backgroundColor: AppTheme.outflowCoral,
           ),
         );
       }
     });
 
     return Scaffold(
+      backgroundColor: AppTheme.bgCanvas,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -93,22 +94,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                           height: 80,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF6C63FF), Color(0xFF03DAC6)],
+                              colors: [AppTheme.primaryPurple, AppTheme.primaryPurpleLight],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF6C63FF).withValues(alpha: 0.35),
+                                color: AppTheme.primaryPurple.withValues(alpha: 0.35),
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
                               ),
                             ],
                           ),
                           child: const Icon(
-                            Icons.account_balance_wallet_rounded,
-                            size: 42,
+                            Icons.auto_awesome,
+                            size: 40,
                             color: Colors.white,
                           ),
                         ),
@@ -119,17 +120,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 28,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.textPrimary,
                           letterSpacing: -0.5,
                         ),
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Login to manage your finances intelligently',
+                        'Login to manage your finances with Zyno AI',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.white54,
+                          fontSize: 14.5,
+                          color: AppTheme.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 36),
@@ -139,9 +141,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                         hintText: 'name@example.com',
                         prefixIcon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Enter your email';
-                          if (!v.contains('@')) return 'Enter a valid email';
+                        validator: (val) {
+                          if (val == null || val.isEmpty) return 'Please enter your email';
+                          if (!val.contains('@')) return 'Please enter a valid email';
                           return null;
                         },
                       ),
@@ -149,38 +151,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                       AppTextField(
                         controller: _passwordController,
                         labelText: 'Password',
-                        hintText: 'Enter your password',
-                        prefixIcon: Icons.lock_outline,
+                        hintText: '••••••••',
+                        prefixIcon: Icons.lock_outline_rounded,
                         isPassword: true,
-                        validator: (v) => (v == null || v.isEmpty) ? 'Enter password' : null,
+                        textInputAction: TextInputAction.done,
                         onSubmitted: (_) => _handleLogin(),
+                        validator: (val) {
+                          if (val == null || val.isEmpty) return 'Please enter your password';
+                          if (val.length < 6) return 'Password must be at least 6 characters';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 28),
                       AppButton(
-                        text: 'Login',
-                        isLoading: authState.isLoading,
+                        text: 'Sign In',
                         onPressed: _handleLogin,
+                        isLoading: authState.isLoading,
                       ),
-                      const SizedBox(height: 20),
-                      Center(
-                        child: TextButton(
-                          onPressed: () => context.push('/register'),
-                          child: RichText(
-                            text: const TextSpan(
-                              text: "Don't have an account? ",
-                              style: TextStyle(color: Colors.white54, fontSize: 14),
-                              children: [
-                                TextSpan(
-                                  text: 'Sign Up',
-                                  style: TextStyle(
-                                    color: Color(0xFF03DAC6),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Don't have an account?",
+                            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                          ),
+                          TextButton(
+                            onPressed: () => context.go('/register'),
+                            child: const Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                color: AppTheme.primaryPurple,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),

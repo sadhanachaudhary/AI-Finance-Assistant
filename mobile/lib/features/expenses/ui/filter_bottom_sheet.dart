@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/utils/formatters.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -62,11 +63,11 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF6C63FF),
+            colorScheme: const ColorScheme.light(
+              primary: AppTheme.primaryPurple,
               onPrimary: Colors.white,
-              surface: Color(0xFF1E1E1E),
-              onSurface: Colors.white,
+              surface: Colors.white,
+              onSurface: AppTheme.textPrimary,
             ),
           ),
           child: child!,
@@ -99,259 +100,178 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     ref.read(selectedCategoryFilterProvider.notifier).state = null;
     ref.read(searchQueryProvider.notifier).state = '';
 
-    Navigator.of(context).pop();
+    Navigator.pop(context);
   }
 
   void _applyFilters() {
-    final minVal = double.tryParse(_minAmountController.text.trim());
-    final maxVal = double.tryParse(_maxAmountController.text.trim());
-
     ref.read(dateFilterPresetProvider.notifier).state = _selectedDatePreset;
     ref.read(customDateRangeProvider.notifier).state = _selectedDateRange;
     ref.read(sortOptionProvider.notifier).state = _selectedSortOption;
+
+    final minVal = double.tryParse(_minAmountController.text.trim());
+    final maxVal = double.tryParse(_maxAmountController.text.trim());
     ref.read(minAmountFilterProvider.notifier).state = minVal;
     ref.read(maxAmountFilterProvider.notifier).state = maxVal;
 
-    Navigator.of(context).pop();
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
-      ),
-      padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottomInset),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: const BoxDecoration(
-        color: Color(0xFF181818),
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(top: BorderSide(color: Color(0xFF2C2C2C), width: 1)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x18000000),
+            blurRadius: 24,
+            offset: Offset(0, -4),
+          ),
+        ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drag Handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.borderLight,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          // Title & Reset
-          Row(
-            children: [
-              IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-                  ),
-                  child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
-                ),
-                onPressed: () => Navigator.of(context).pop(),
-                tooltip: 'Back',
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
+            const SizedBox(height: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
                   'Filter & Sort',
                   style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textPrimary,
                   ),
                 ),
-              ),
-              TextButton(
-                onPressed: _resetFilters,
-                child: const Text(
-                  'Reset All',
-                  style: TextStyle(
-                    color: Color(0xFFCF6679),
-                    fontWeight: FontWeight.w600,
+                TextButton(
+                  onPressed: _resetFilters,
+                  child: const Text('Reset All', style: TextStyle(color: AppTheme.outflowCoral, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text('Sort by', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.textPrimary)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: SortOption.values.map((opt) {
+                final isSelected = _selectedSortOption == opt;
+                return ChoiceChip(
+                  label: Text(opt.label),
+                  selected: isSelected,
+                  selectedColor: AppTheme.primaryPurple,
+                  backgroundColor: AppTheme.surfaceElevated,
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : AppTheme.textPrimary,
+                    fontSize: 12.5,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   ),
+                  side: BorderSide(color: isSelected ? AppTheme.primaryPurple : AppTheme.borderLight),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onSelected: (selected) {
+                    if (selected) setState(() => _selectedSortOption = opt);
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+            const Text('Date Range', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.textPrimary)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: DateFilterPreset.values.map((preset) {
+                final isSelected = _selectedDatePreset == preset;
+                return ChoiceChip(
+                  label: Text(preset.label),
+                  selected: isSelected,
+                  selectedColor: AppTheme.primaryPurple,
+                  backgroundColor: AppTheme.surfaceElevated,
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : AppTheme.textPrimary,
+                    fontSize: 12.5,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  ),
+                  side: BorderSide(color: isSelected ? AppTheme.primaryPurple : AppTheme.borderLight),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onSelected: (selected) {
+                    if (selected) {
+                      setState(() => _selectedDatePreset = preset);
+                      if (preset == DateFilterPreset.custom) _pickDateRange();
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+            if (_selectedDatePreset == DateFilterPreset.custom && _selectedDateRange != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppTheme.softPurpleBadge,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${Formatters.formatDate(_selectedDateRange!.start)} - ${Formatters.formatDate(_selectedDateRange!.end)}',
+                      style: const TextStyle(fontSize: 13, color: AppTheme.primaryPurple, fontWeight: FontWeight.bold),
+                    ),
+                    InkWell(
+                      onTap: _pickDateRange,
+                      child: const Text('Change', style: TextStyle(color: AppTheme.primaryPurple, fontSize: 12, decoration: TextDecoration.underline)),
+                    ),
+                  ],
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Section 1: Date Range
-                  const Text(
-                    'DATE TIMELINE',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white54,
-                      letterSpacing: 1.1,
-                    ),
+            const SizedBox(height: 20),
+            const Text('Amount Range (₹)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.textPrimary)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    controller: _minAmountController,
+                    hintText: 'Min (e.g. 100)',
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: DateFilterPreset.values.map((preset) {
-                      final isSelected = _selectedDatePreset == preset;
-                      return ChoiceChip(
-                        label: Text(preset.label),
-                        selected: isSelected,
-                        selectedColor: const Color(0xFF6C63FF),
-                        backgroundColor: const Color(0xFF252525),
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.white70,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 13,
-                        ),
-                        side: BorderSide(
-                          color: isSelected ? const Color(0xFF6C63FF) : const Color(0xFF333333),
-                        ),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        onSelected: (selected) {
-                          if (selected) {
-                            if (preset == DateFilterPreset.custom) {
-                              _pickDateRange();
-                            } else {
-                              setState(() {
-                                _selectedDatePreset = preset;
-                              });
-                            }
-                          }
-                        },
-                      );
-                    }).toList(),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppTextField(
+                    controller: _maxAmountController,
+                    hintText: 'Max (e.g. 5000)',
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   ),
-                  if (_selectedDatePreset == DateFilterPreset.custom && _selectedDateRange != null) ...[
-                    const SizedBox(height: 10),
-                    InkWell(
-                      onTap: _pickDateRange,
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF252525),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF6C63FF).withValues(alpha: 0.5)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF6C63FF)),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${Formatters.formatDate(_selectedDateRange!.start)} - ${Formatters.formatDate(_selectedDateRange!.end)}',
-                              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
-                            ),
-                            const Spacer(),
-                            const Icon(Icons.edit_outlined, size: 16, color: Colors.white54),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  // Section 2: Sort By
-                  const Text(
-                    'SORT ORDER',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white54,
-                      letterSpacing: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: SortOption.values.map((sort) {
-                      final isSelected = _selectedSortOption == sort;
-                      return ChoiceChip(
-                        label: Text(sort.label),
-                        selected: isSelected,
-                        selectedColor: const Color(0xFF6C63FF),
-                        backgroundColor: const Color(0xFF252525),
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.white70,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 13,
-                        ),
-                        side: BorderSide(
-                          color: isSelected ? const Color(0xFF6C63FF) : const Color(0xFF333333),
-                        ),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        onSelected: (selected) {
-                          if (selected) {
-                            setState(() {
-                              _selectedSortOption = sort;
-                            });
-                          }
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 24),
-                  // Section 3: Amount Range
-                  const Text(
-                    'AMOUNT RANGE (₹)',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white54,
-                      letterSpacing: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppTextField(
-                          controller: _minAmountController,
-                          hintText: 'Min Amount',
-                          keyboardType: TextInputType.number,
-                          prefixIcon: Icons.arrow_downward_rounded,
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Text('-', style: TextStyle(color: Colors.white38, fontSize: 18)),
-                      ),
-                      Expanded(
-                        child: AppTextField(
-                          controller: _maxAmountController,
-                          hintText: 'Max Amount',
-                          keyboardType: TextInputType.number,
-                          prefixIcon: Icons.arrow_upward_rounded,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 12),
-          // Apply Button
-          AppButton(
-            text: 'Apply Filters',
-            onPressed: _applyFilters,
-          ),
-        ],
+            const SizedBox(height: 26),
+            AppButton(
+              text: 'Apply Filters',
+              onPressed: _applyFilters,
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -61,10 +62,6 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
       'label': '⛽ Shell Petrol',
       'text': 'Debited INR 1,800.00 for fuel at Shell Petrol Station via UPI',
     },
-    {
-      'label': '🔒 OTP Demo',
-      'text': 'Your OTP for banking login is 492104. Do not share your OTP or password with anyone.',
-    },
   ];
 
   @override
@@ -100,49 +97,33 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
       setState(() {
         _isOtpBlocked = true;
         _isParsed = false;
-        _amountController.clear();
-        _merchantController.clear();
       });
       return;
     }
 
-    // Match category
     final categories = ref.read(categoriesProvider).value ?? [];
-    Category? matchedCat;
-    try {
-      matchedCat = categories.firstWhere(
-        (c) => c.name.toLowerCase() == parsed.categoryName.toLowerCase(),
-      );
-    } catch (_) {
-      matchedCat = categories.isNotEmpty ? categories.first : null;
+    String? matchedCatId;
+    for (final c in categories) {
+      if (c.name.toLowerCase() == parsed.categoryName.toLowerCase()) {
+        matchedCatId = c.id;
+        break;
+      }
     }
 
     setState(() {
       _isOtpBlocked = false;
       _isParsed = true;
-      _amountController.text = parsed.amount.toStringAsFixed(2);
+      _amountController.text = parsed.amount.toStringAsFixed(0);
       _merchantController.text = parsed.merchant;
       _maskedAccount = parsed.maskedAccount;
-      _notesController.text = parsed.maskedAccount != null ? 'Via account ${parsed.maskedAccount}' : 'Auto-detected via alert';
-      if (matchedCat != null) {
-        _selectedCategoryId = matchedCat.id;
-      }
+      _selectedCategoryId = matchedCatId ?? (categories.isNotEmpty ? categories.first.id : null);
+      _notesController.text = parsed.maskedAccount != null ? 'Via A/c ${parsed.maskedAccount}' : '';
     });
   }
 
-  void _applySample(String sampleText) {
-    _textController.text = sampleText;
-    _onTextUpdated(sampleText);
-  }
-
-  Future<void> _saveExpense() async {
+  Future<void> _saveParsedExpense() async {
     final amount = double.tryParse(_amountController.text.trim());
-    if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid amount')),
-      );
-      return;
-    }
+    if (amount == null || amount <= 0) return;
 
     setState(() => _isLoading = true);
 
@@ -150,7 +131,7 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
       await ref.read(expensesProvider.notifier).addExpense(
             amount: amount,
             date: DateTime.now(),
-            merchant: _merchantController.text.trim().isNotEmpty ? _merchantController.text.trim() : 'Expense',
+            merchant: _merchantController.text.trim(),
             notes: _notesController.text.trim(),
             categoryId: _selectedCategoryId,
           );
@@ -159,14 +140,8 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white),
-                const SizedBox(width: 8),
-                Text('Logged ₹${amount.toStringAsFixed(2)} for ${_merchantController.text}!'),
-              ],
-            ),
-            backgroundColor: const Color(0xFF03DAC6),
+            backgroundColor: AppTheme.primaryPurple,
+            content: Text('🎉 Ingested ${parsedCurrency(_merchantController.text)} expense!'),
           ),
         );
       }
@@ -174,17 +149,17 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save expense: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            content: Text('Failed: $e'),
+            backgroundColor: AppTheme.outflowCoral,
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
+
+  String parsedCurrency(String merchant) => merchant.isNotEmpty ? merchant : 'Smart';
 
   @override
   Widget build(BuildContext context) {
@@ -192,325 +167,207 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.9,
-      ),
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 16,
-        bottom: bottomInset > 0 ? bottomInset + 16 : 24,
-      ),
+      margin: EdgeInsets.only(bottom: bottomInset),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: const BoxDecoration(
-        color: Color(0xFF14141E),
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(top: BorderSide(color: Color(0xFF2C2C3E), width: 1.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x18000000),
+            blurRadius: 24,
+            offset: Offset(0, -4),
+          ),
+        ],
       ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Handle
             Center(
               child: Container(
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: AppTheme.borderLight,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 18),
-
-            // Header Title
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                const Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: AppTheme.primaryPurple, size: 22),
+                    SizedBox(width: 10),
+                    Text(
+                      'Smart SMS Ingestion',
+                      style: TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
                     ),
-                    child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                  tooltip: 'Back',
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.auto_awesome, color: Color(0xFF6C63FF), size: 22),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Smart Spending Ingest',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        'Bank Alert & SMS Parser',
-                        style: TextStyle(fontSize: 12, color: Colors.white54),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
                 IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
-                  ),
                   onPressed: () => Navigator.pop(context),
-                  tooltip: 'Close',
+                  icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-
-            // Privacy Guarantee Notice Box
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF03DAC6).withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFF03DAC6).withValues(alpha: 0.25)),
-              ),
-              child: const Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.security_rounded, color: Color(0xFF03DAC6), size: 18),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'On-Device Processing: Sensitive credentials & OTPs are discarded immediately. Only amount & merchant metadata are logged.',
-                      style: TextStyle(fontSize: 11, color: Colors.white70, height: 1.35),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Preset Test Buttons (Clickable)
+            const SizedBox(height: 6),
             const Text(
-              'Test with Sample Bank Alerts:',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white60),
+              'Paste any bank SMS or transaction notification. Sensitive OTPs are automatically scrubbed.',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
             ),
+            const SizedBox(height: 16),
+            // Quick Sample Pills
+            const Text('Test with bank alert samples:', style: TextStyle(color: AppTheme.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: _sampleAlerts.map((sample) {
-                  final isOtp = sample['label']!.contains('OTP');
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ActionChip(
-                      backgroundColor: isOtp ? const Color(0xFFFF5252).withValues(alpha: 0.15) : const Color(0xFF222232),
-                      side: BorderSide(
-                        color: isOtp ? const Color(0xFFFF5252).withValues(alpha: 0.4) : const Color(0xFF323248),
-                      ),
-                      label: Text(
-                        sample['label']!,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isOtp ? const Color(0xFFFF5252) : Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      onPressed: () => _applySample(sample['text']!),
+                      label: Text(sample['label']!),
+                      backgroundColor: AppTheme.surfaceElevated,
+                      side: const BorderSide(color: AppTheme.borderLight),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      labelStyle: const TextStyle(fontSize: 12, color: AppTheme.textPrimary, fontWeight: FontWeight.w600),
+                      onPressed: () {
+                        _textController.text = sample['text']!;
+                        _onTextUpdated(sample['text']!);
+                      },
                     ),
                   );
                 }).toList(),
               ),
             ),
             const SizedBox(height: 14),
-
-            // Text Input Box (Paste or type bank SMS / alert)
-            AppTextField(
+            // Paste Input Field
+            TextField(
               controller: _textController,
-              labelText: 'Paste Bank Alert / Transaction SMS',
-              hintText: 'e.g. Rs 450 debited from A/c XX1234 towards Swiggy...',
-              prefixIcon: Icons.sms_outlined,
               maxLines: 3,
+              style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
               onChanged: _onTextUpdated,
+              decoration: InputDecoration(
+                hintText: 'Paste bank SMS or transaction alert here...',
+                hintStyle: const TextStyle(color: AppTheme.textTertiary, fontSize: 13.5),
+                filled: true,
+                fillColor: AppTheme.surfaceElevated,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.primaryPurple, width: 1.5)),
+              ),
             ),
-            const SizedBox(height: 16),
-
-            // OTP Blocked Alert
+            const SizedBox(height: 14),
+            // Discarded OTP Alert
             if (_isOtpBlocked)
               Container(
-                margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF5252).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFFF5252).withValues(alpha: 0.4)),
+                  color: AppTheme.softRedBadge,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFFCA5A5)),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.block_rounded, color: Color(0xFFFF5252), size: 24),
-                    SizedBox(width: 12),
+                    Icon(Icons.shield_outlined, color: AppTheme.outflowCoral, size: 22),
+                    SizedBox(width: 10),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Sensitive OTP Detected & Discarded',
-                            style: TextStyle(
-                              color: Color(0xFFFF5252),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'For your safety, the app refuses to read or store one-time passwords.',
-                            style: TextStyle(color: Colors.white70, fontSize: 11),
-                          ),
-                        ],
+                      child: Text(
+                        '🛡️ Sensitive OTP Detected: Discarded automatically to protect your privacy.',
+                        style: TextStyle(color: AppTheme.outflowCoral, fontSize: 12.5, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
                 ),
               ),
 
-            // Parsed Live Card
+            // Parsed Result Card
             if (_isParsed) ...[
-              GlassCard(
+              Container(
                 padding: const EdgeInsets.all(16),
-                gradientColors: const [Color(0xFF242242), Color(0xFF161528)],
+                decoration: BoxDecoration(
+                  color: AppTheme.softGreenBadge,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFF6EE7B7)),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    const Row(
                       children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.check_circle_rounded, color: Color(0xFF03DAC6), size: 16),
-                            SizedBox(width: 6),
-                            Text(
-                              'Auto-Detected Expense',
-                              style: TextStyle(color: Color(0xFF03DAC6), fontWeight: FontWeight.bold, fontSize: 13),
-                            ),
-                          ],
+                        Icon(Icons.check_circle_rounded, color: AppTheme.inflowGreen, size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Parsed Transaction Ready',
+                          style: TextStyle(color: AppTheme.inflowGreen, fontWeight: FontWeight.bold, fontSize: 13.5),
                         ),
-                        if (_maskedAccount != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.white10,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              _maskedAccount!,
-                              style: const TextStyle(color: Colors.white70, fontSize: 11, fontFamily: 'monospace'),
-                            ),
-                          ),
                       ],
                     ),
                     const SizedBox(height: 14),
-
-                    // Amount & Merchant fields
                     Row(
                       children: [
                         Expanded(
-                          flex: 2,
                           child: AppTextField(
                             controller: _amountController,
                             labelText: 'Amount (₹)',
-                            hintText: '0.00',
-                            prefixIcon: Icons.currency_rupee,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            hintText: '0',
+                            keyboardType: TextInputType.number,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          flex: 3,
                           child: AppTextField(
                             controller: _merchantController,
                             labelText: 'Merchant',
-                            hintText: 'Store / Merchant Name',
-                            prefixIcon: Icons.storefront_rounded,
+                            hintText: 'Merchant',
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 14),
-
-                    // Category selection
-                    const Text(
-                      'Category (Auto-Assigned)',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 38,
-                      child: ListView.separated(
+                    const SizedBox(height: 12),
+                    if (categories.isNotEmpty) ...[
+                      const Text('Category', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                      const SizedBox(height: 6),
+                      SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        itemCount: categories.length,
-                        separatorBuilder: (context, index) => const SizedBox(width: 6),
-                        itemBuilder: (context, index) {
-                          final cat = categories[index];
-                          final isSelected = _selectedCategoryId == cat.id;
-                          return CategoryChip(
-                            label: cat.name,
-                            icon: cat.parsedIcon,
-                            color: cat.parsedColor,
-                            isSelected: isSelected,
-                            onSelected: (selected) {
-                              setState(() {
-                                _selectedCategoryId = selected ? cat.id : null;
-                              });
-                            },
-                          );
-                        },
+                        child: Row(
+                          children: categories.map((cat) {
+                            final isSelected = _selectedCategoryId == cat.id;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: CategoryChip(
+                                label: cat.name,
+                                icon: cat.parsedIcon,
+                                color: cat.parsedColor,
+                                isSelected: isSelected,
+                                onSelected: (s) => setState(() => _selectedCategoryId = s ? cat.id : null),
+                              ),
+                            );
+                          }).toList(),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Notes
-                    AppTextField(
-                      controller: _notesController,
-                      labelText: 'Notes',
-                      hintText: 'Add note...',
-                      prefixIcon: Icons.notes_rounded,
-                    ),
+                    ],
                   ],
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Save Button
               AppButton(
-                text: 'Confirm & Log Expense',
-                icon: Icons.check_circle_outline,
+                text: 'Save Ingested Expense',
+                onPressed: _saveParsedExpense,
                 isLoading: _isLoading,
-                onPressed: _saveExpense,
+                icon: Icons.check_rounded,
               ),
             ],
+            const SizedBox(height: 10),
           ],
         ),
       ),

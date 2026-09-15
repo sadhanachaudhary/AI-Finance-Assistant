@@ -27,7 +27,7 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
 
   Future<List<AppNotification>> _fetchNotifications() async {
     try {
-      final res = await _api.get(ApiEndpoints.notifications);
+      final res = await _api.dio.get(ApiEndpoints.notifications);
       if (res.statusCode == 200 && res.data != null) {
         final data = res.data['data'];
         if (data != null && data['notifications'] != null) {
@@ -79,7 +79,7 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
 
   Future<void> generateSmartAlerts() async {
     try {
-      final res = await _api.post(ApiEndpoints.notificationGenerateAlerts, {});
+      final res = await _api.dio.post(ApiEndpoints.notificationGenerateAlerts, data: {});
       if (res.statusCode == 200 && res.data != null) {
         final data = res.data['data'];
         if (data != null && data['notifications'] != null) {
@@ -101,7 +101,7 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
     );
 
     try {
-      await _api.patch(ApiEndpoints.notificationRead(id), {});
+      await _api.dio.patch(ApiEndpoints.notificationRead(id), data: {});
     } catch (_) {}
   }
 
@@ -112,7 +112,7 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
     );
 
     try {
-      await _api.patch(ApiEndpoints.notificationReadAll, {});
+      await _api.dio.patch(ApiEndpoints.notificationReadAll, data: {});
     } catch (_) {}
   }
 
@@ -123,7 +123,7 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
     );
 
     try {
-      await _api.delete(ApiEndpoints.notificationById(id));
+      await _api.dio.delete(ApiEndpoints.notificationById(id));
     } catch (_) {}
   }
 }
