@@ -36,6 +36,7 @@ abstract final class ApiEndpoints {
 
   // --- AI Wealth Advisor & Chat Endpoints ---
   static const String aiChat = '/ai/chat';
+  static const String aiParseExpense = '/ai/parse-expense';
   static const String aiConversations = '/ai/conversations';
   static String aiConversationById(String id) => '/ai/conversations/$id';
   static const String aiInsights = '/ai/insights';

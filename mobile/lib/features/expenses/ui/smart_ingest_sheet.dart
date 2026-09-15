@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/constants/api_endpoints.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/category_chip.dart';
-import '../models/category_model.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../providers/expense_provider.dart';
 import '../services/smart_transaction_parser.dart';
 
@@ -31,36 +31,54 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
   final _merchantController = TextEditingController();
   final _notesController = TextEditingController();
 
+  int _selectedMode = 0; // 0 = Conversational / Natural Language, 1 = Bank SMS
   String? _selectedCategoryId;
   String? _maskedAccount;
+  DateTime _transactionDate = DateTime.now();
   bool _isOtpBlocked = false;
   bool _isParsed = false;
   bool _isLoading = false;
+  bool _isAiParsing = false;
 
-  final List<Map<String, String>> _sampleAlerts = [
+  final List<Map<String, String>> _conversationalSamples = [
     {
-      'label': '🍔 Swiggy UPI',
-      'text': 'Rs 450.00 debited from A/c XX4921 towards Swiggy on 13-Sep via UPI ref 92837482',
+      'label': '☕ Starbucks Coffee',
+      'text': 'Spent 450 at Starbucks for cold brew coffee today',
     },
     {
-      'label': '🛍️ Amazon Card',
-      'text': 'INR 2,499.00 spent on your ICICI Card ending 8812 at Amazon Marketplace on 13-Sep',
+      'label': '🍔 Swiggy Dinner',
+      'text': 'Ordered 890 Swiggy dinner with friends yesterday',
     },
     {
-      'label': '🚗 Uber Trip',
-      'text': 'Paid Rs 320.00 to Uber India via Google Pay from A/c XX1234',
+      'label': '🚗 Uber Commute',
+      'text': 'Paid 320 for Uber ride to office',
     },
     {
-      'label': '☕ Starbucks',
-      'text': 'Purchase of Rs 550.00 at Starbucks Cafe with HDFC Bank Debit Card XX9910',
+      'label': '🛍️ Zara Shopping',
+      'text': '4.5k shopping at Zara store today',
     },
     {
-      'label': '🎬 Netflix',
-      'text': 'Autopay of Rs 649.00 debited towards Netflix Entertainment from A/c XX4921',
+      'label': '🎬 Netflix Sub',
+      'text': '649 for Netflix monthly subscription',
     },
     {
-      'label': '⛽ Shell Petrol',
-      'text': 'Debited INR 1,800.00 for fuel at Shell Petrol Station via UPI',
+      'label': '🥦 Blinkit Groceries',
+      'text': 'Spent 1,250 on Blinkit groceries this morning',
+    },
+  ];
+
+  final List<Map<String, String>> _bankSmsAlerts = [
+    {
+      'label': '💳 HDFC Alert',
+      'text': 'Rs 3,499.00 spent on your HDFC Bank Card ending 4092 at Amazon Marketplace on 15-Sep. Avl bal: Rs 42,100.',
+    },
+    {
+      'label': '🏦 ICICI UPI',
+      'text': 'Rs 450.00 debited from A/c XX4921 towards Swiggy on 14-Sep via UPI ref 92837482',
+    },
+    {
+      'label': '🏧 SBI Card',
+      'text': 'INR 1,800.00 spent on SBI Card ending 1289 at Shell Petrol Station on 13-Sep',
     },
   ];
 
@@ -113,12 +131,60 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
     setState(() {
       _isOtpBlocked = false;
       _isParsed = true;
+      _transactionDate = parsed.date;
       _amountController.text = parsed.amount.toStringAsFixed(0);
       _merchantController.text = parsed.merchant;
       _maskedAccount = parsed.maskedAccount;
       _selectedCategoryId = matchedCatId ?? (categories.isNotEmpty ? categories.first.id : null);
-      _notesController.text = parsed.maskedAccount != null ? 'Via A/c ${parsed.maskedAccount}' : '';
+      _notesController.text = parsed.notes ?? (parsed.maskedAccount != null ? 'Via A/c ${parsed.maskedAccount}' : '');
     });
+  }
+
+  Future<void> _triggerCloudAiParse() async {
+    final text = _textController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() => _isAiParsing = true);
+
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final res = await apiClient.dio.post(
+        ApiEndpoints.aiParseExpense,
+        data: {'text': text},
+      );
+
+      if (res.statusCode == 200 && res.data != null && res.data['data'] != null) {
+        final parsed = res.data['data']['parsed'];
+        if (parsed != null && parsed['amount'] != null && (parsed['amount'] as num) > 0) {
+          final categories = ref.read(categoriesProvider).value ?? [];
+          final categoryName = parsed['categoryName'] ?? 'Shopping';
+          String? catId = parsed['categoryId'];
+
+          if (catId == null) {
+            final match = categories.where((c) => c.name.toLowerCase() == categoryName.toString().toLowerCase()).firstOrNull;
+            catId = match?.id;
+          }
+
+          setState(() {
+            _isParsed = true;
+            _isOtpBlocked = false;
+            _amountController.text = (parsed['amount'] as num).toStringAsFixed(0);
+            _merchantController.text = parsed['merchant'] ?? 'Expense';
+            _selectedCategoryId = catId ?? (categories.isNotEmpty ? categories.first.id : null);
+            _notesController.text = parsed['notes'] ?? '';
+            if (parsed['date'] != null) {
+              _transactionDate = DateTime.tryParse(parsed['date']) ?? DateTime.now();
+            }
+          });
+          return;
+        }
+      }
+    } catch (_) {
+      // Fallback to on-device parser
+      _onTextUpdated(text);
+    } finally {
+      if (mounted) setState(() => _isAiParsing = false);
+    }
   }
 
   Future<void> _saveParsedExpense() async {
@@ -130,7 +196,7 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
     try {
       await ref.read(expensesProvider.notifier).addExpense(
             amount: amount,
-            date: DateTime.now(),
+            date: _transactionDate,
             merchant: _merchantController.text.trim(),
             notes: _notesController.text.trim(),
             categoryId: _selectedCategoryId,
@@ -141,7 +207,13 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: AppTheme.primaryPurple,
-            content: Text('🎉 Ingested ${parsedCurrency(_merchantController.text)} expense!'),
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Text('Added ₹${amount.toStringAsFixed(0)} for ${_merchantController.text.trim()}!'),
+              ],
+            ),
           ),
         );
       }
@@ -149,7 +221,7 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed: $e'),
+            content: Text('Failed to save expense: $e'),
             backgroundColor: AppTheme.outflowCoral,
           ),
         );
@@ -159,16 +231,15 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
     }
   }
 
-  String parsedCurrency(String merchant) => merchant.isNotEmpty ? merchant : 'Smart';
-
   @override
   Widget build(BuildContext context) {
     final categories = ref.watch(categoriesProvider).value ?? [];
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final samples = _selectedMode == 0 ? _conversationalSamples : _bankSmsAlerts;
 
     return Container(
       margin: EdgeInsets.only(bottom: bottomInset),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -204,9 +275,9 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
                     Icon(Icons.auto_awesome, color: AppTheme.primaryPurple, size: 22),
                     SizedBox(width: 10),
                     Text(
-                      'Smart SMS Ingestion',
+                      'Smart Ingest (NLP)',
                       style: TextStyle(
-                        fontSize: 19,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: AppTheme.textPrimary,
                       ),
@@ -219,19 +290,97 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            const Text(
-              'Paste any bank SMS or transaction notification. Sensitive OTPs are automatically scrubbed.',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            const SizedBox(height: 12),
+
+            // Mode Selector: Natural Language vs Bank SMS
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceElevated,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedMode = 0),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _selectedMode == 0 ? Colors.white : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: _selectedMode == 0
+                              ? [
+                                  const BoxShadow(
+                                    color: Color(0x0C000000),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '🗣️ Conversational',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: _selectedMode == 0 ? FontWeight.bold : FontWeight.w600,
+                              color: _selectedMode == 0 ? AppTheme.primaryPurple : AppTheme.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedMode = 1),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _selectedMode == 1 ? Colors.white : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: _selectedMode == 1
+                              ? [
+                                  const BoxShadow(
+                                    color: Color(0x0C000000),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '📩 Bank SMS / UPI',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: _selectedMode == 1 ? FontWeight.bold : FontWeight.w600,
+                              color: _selectedMode == 1 ? AppTheme.primaryPurple : AppTheme.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            // Quick Sample Pills
-            const Text('Test with bank alert samples:', style: TextStyle(color: AppTheme.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
+
+            const SizedBox(height: 14),
+
+            // Quick Samples Carousel
+            Text(
+              _selectedMode == 0 ? 'Try conversational prompts:' : 'Try bank SMS alerts:',
+              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 8),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: _sampleAlerts.map((sample) {
+                children: samples.map((sample) {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ActionChip(
@@ -249,28 +398,49 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
                 }).toList(),
               ),
             ),
+
             const SizedBox(height: 14),
-            // Paste Input Field
+
+            // Input Text Field
             TextField(
               controller: _textController,
-              maxLines: 3,
+              maxLines: 2,
               style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
               onChanged: _onTextUpdated,
               decoration: InputDecoration(
-                hintText: 'Paste bank SMS or transaction alert here...',
-                hintStyle: const TextStyle(color: AppTheme.textTertiary, fontSize: 13.5),
+                hintText: _selectedMode == 0
+                    ? 'e.g. "Spent 450 at Starbucks on coffee today"'
+                    : 'Paste bank SMS or transaction notification here...',
+                hintStyle: const TextStyle(color: AppTheme.textTertiary, fontSize: 13),
                 filled: true,
                 fillColor: AppTheme.surfaceElevated,
+                suffixIcon: _isAiParsing
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryPurple),
+                        ),
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.auto_awesome, color: AppTheme.primaryPurple, size: 20),
+                        tooltip: 'Deep AI Parse',
+                        onPressed: _triggerCloudAiParse,
+                      ),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.borderLight)),
                 enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.borderLight)),
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.primaryPurple, width: 1.5)),
               ),
             ),
+
             const SizedBox(height: 14),
+
             // Discarded OTP Alert
             if (_isOtpBlocked)
               Container(
                 padding: const EdgeInsets.all(14),
+                margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
                   color: AppTheme.softRedBadge,
                   borderRadius: BorderRadius.circular(16),
@@ -359,7 +529,7 @@ class _SmartIngestSheetState extends ConsumerState<SmartIngestSheet> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
               AppButton(
                 text: 'Save Ingested Expense',
                 onPressed: _saveParsedExpense,
